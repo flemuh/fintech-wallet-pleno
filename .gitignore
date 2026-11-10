@@ -1,0 +1,15 @@
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Dependências e builds
+vendor/
+node_modules/
+dist/
+
+# Editor e sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
