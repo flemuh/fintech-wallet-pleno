@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import type { Component } from 'vue'
 
 import AppField from '@/components/ui/AppField.vue'
@@ -20,12 +20,6 @@ const props = defineProps<{
 }>()
 
 const valor = ref('')
-
-// Aplica a máscara a cada digitação; letras e símbolos nunca chegam ao campo
-watch(valor, (novo) => {
-  const mascarado = mascararReais(novo)
-  if (mascarado !== novo) valor.value = mascarado
-})
 
 const erroLocal = ref<string | null>(null)
 const toast = useToast()
@@ -80,6 +74,7 @@ async function enviarFormulario(): Promise<void> {
       :id="`${prefixoDoId}-valor`"
       v-model="valor"
       label="Valor (R$)"
+      :mascara="mascararReais"
       autocomplete="off"
       dica="Exemplo: 10,50"
       :erro="erroDoValor"
