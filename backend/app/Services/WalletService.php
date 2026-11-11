@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\TransactionType;
 use App\Exceptions\ConcurrentOperationException;
+use App\Exceptions\InsufficientBalanceException;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -21,6 +22,11 @@ class WalletService
         return $this->aplicar($usuario, TransactionType::Credit, $valorEmCentavos);
     }
 
+    public function sacar(User $usuario, int $valorEmCentavos): Transaction
+    {
+        return $this->aplicar($usuario, TransactionType::Debit, $valorEmCentavos);
+    }
+
     /** Atualiza o saldo e grava a movimentação na mesma transação do banco. */
     private function aplicar(User $usuario, TransactionType $tipo, int $valorEmCentavos): Transaction
     {
@@ -36,6 +42,11 @@ class WalletService
                 $novoSaldo = $tipo === TransactionType::Credit
                     ? $carteira->balance + $valorEmCentavos
                     : $carteira->balance - $valorEmCentavos;
+
+                // Checa depois de travar: o saldo lido aqui é o definitivo
+                if ($novoSaldo < 0) {
+                    throw new InsufficientBalanceException;
+                }
 
                 $carteira->update(['balance' => $novoSaldo]);
 
