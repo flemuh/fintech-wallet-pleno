@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import OperationForm from '@/components/wallet/OperationForm.vue'
+import { useToast } from '@/composables/useToast'
 
 type Executar = (valorEmReais: number) => Promise<unknown>
 
@@ -24,7 +25,11 @@ async function enviarValor(wrapper: ReturnType<typeof montarFormulario>, texto: 
 }
 
 describe('OperationForm', () => {
-  it('envia o valor em reais, mostra o sucesso e limpa o campo', async () => {
+  beforeEach(() => {
+    useToast().limpar()
+  })
+
+  it('envia o valor em reais, avisa o sucesso com um toast e limpa o campo', async () => {
     const executar = vi.fn<Executar>().mockResolvedValue(undefined)
     const wrapper = montarFormulario(executar)
 
@@ -32,7 +37,9 @@ describe('OperationForm', () => {
     await flushPromises()
 
     expect(executar).toHaveBeenCalledWith(10.5)
-    expect(wrapper.text()).toContain('Operação realizada com sucesso.')
+    expect(useToast().toasts.value.map((toast) => [toast.tipo, toast.mensagem])).toEqual([
+      ['sucesso', 'Operação realizada com sucesso.'],
+    ])
     expect(wrapper.find('input').element.value).toBe('')
   })
 
@@ -47,15 +54,14 @@ describe('OperationForm', () => {
     expect(wrapper.text()).toContain('Informe um valor maior que zero')
   })
 
-  it('mostra um alerta quando a operação falha', async () => {
+  it('avisa a falha da operação com um toast de erro', async () => {
     const executar = vi.fn<Executar>().mockRejectedValue(new Error('falhou'))
     const wrapper = montarFormulario(executar)
 
     await enviarValor(wrapper, '10')
     await flushPromises()
 
-    expect(wrapper.find('[role="alert"]').exists()).toBe(true)
-    expect(wrapper.text()).not.toContain('Operação realizada com sucesso.')
+    expect(useToast().toasts.value.map((toast) => toast.tipo)).toEqual(['erro'])
   })
 
   it('desabilita o botão enquanto envia', async () => {

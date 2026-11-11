@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 
+import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
 
 const auth = useAuthStore()
 const wallet = useWalletStore()
 const roteador = useRouter()
+const toast = useToast()
 
 async function sair() {
   await auth.sair()
   wallet.limpar()
   await roteador.push({ name: 'login' })
+  toast.info('Você saiu da conta.')
 }
 </script>
 

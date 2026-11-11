@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import AppAlert from '@/components/ui/AppAlert.vue'
 import AppField from '@/components/ui/AppField.vue'
 import { useEnvio } from '@/composables/useEnvio'
+import { useToast } from '@/composables/useToast'
 import { formatarCentavos, lerValorEmReais } from '@/utils/money'
 
 const props = defineProps<{
@@ -17,8 +17,8 @@ const props = defineProps<{
 }>()
 
 const valor = ref('')
-const sucesso = ref(false)
 const erroLocal = ref<string | null>(null)
+const toast = useToast()
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
 const excedeOSaldo = computed(() => {
@@ -38,7 +38,6 @@ const erroDoValor = computed(() => {
 })
 
 async function enviarFormulario(): Promise<void> {
-  sucesso.value = false
   erroLocal.value = null
 
   const centavos = lerValorEmReais(valor.value)
@@ -52,7 +51,9 @@ async function enviarFormulario(): Promise<void> {
   const deuCerto = await enviar(() => props.executar(centavos / 100))
   if (deuCerto) {
     valor.value = ''
-    sucesso.value = true
+    toast.sucesso(props.mensagemDeSucesso)
+  } else if (erroGeral.value) {
+    toast.erro(erroGeral.value)
   }
 }
 </script>
@@ -64,9 +65,6 @@ async function enviarFormulario(): Promise<void> {
     @submit.prevent="enviarFormulario"
   >
     <h2 class="text-lg font-semibold text-slate-900">{{ titulo }}</h2>
-
-    <AppAlert v-if="sucesso" tipo="sucesso">{{ mensagemDeSucesso }}</AppAlert>
-    <AppAlert v-if="erroGeral" tipo="erro">{{ erroGeral }}</AppAlert>
 
     <AppField
       :id="`${prefixoDoId}-valor`"

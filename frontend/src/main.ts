@@ -5,6 +5,7 @@ import { createPinia } from 'pinia'
 
 import App from '@/App.vue'
 import { registrarAoExpirarSessao } from '@/api/http'
+import { useToast } from '@/composables/useToast'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
@@ -15,11 +16,12 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
-// Um 401 com token salvo significa sessão expirada: limpa tudo e volta ao login.
+// Um 401 com token salvo significa sessão expirada: limpa tudo, avisa e volta ao login.
 registrarAoExpirarSessao(() => {
   useAuthStore(pinia).limparSessao()
   useWalletStore(pinia).limpar()
   void router.push({ name: 'login' })
+  useToast().alerta('Sua sessão expirou. Entre novamente.')
 })
 
 app.mount('#app')
