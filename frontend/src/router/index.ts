@@ -1,3 +1,4 @@
+import { tituloDaPagina } from '@/router/titulos'
 import { createRouter, createWebHistory, type RouterHistory } from 'vue-router'
 
 import AppLayout from '@/layouts/AppLayout.vue'
@@ -58,4 +59,10 @@ export function criarRoteador(historico: RouterHistory) {
   return roteador
 }
 
-export default criarRoteador(createWebHistory(import.meta.env.BASE_URL))
+const roteador = criarRoteador(createWebHistory(import.meta.env.BASE_URL))
+
+roteador.afterEach((destino) => {
+  document.title = tituloDaPagina(destino.name)
+})
+
+export default roteador
