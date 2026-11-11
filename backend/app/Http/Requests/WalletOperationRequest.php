@@ -26,4 +26,10 @@ class WalletOperationRequest extends FormRequest
     {
         return (int) round(((float) $this->validated('amount')) * 100);
     }
+
+    /** @return array<string, string> */
+    public function attributes(): array
+    {
+        return ['amount' => 'valor'];
+    }
 }
