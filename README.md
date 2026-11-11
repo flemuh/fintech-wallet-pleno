@@ -134,7 +134,7 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 
 | Suíte | Quantidade | O que cobre |
 |---|---|---|
-| PHPUnit (backend) | 88 | Depósito, saque, saldo insuficiente, valores inválidos e de arredondamento, histórico e filtros, resumo do mês no fuso de São Paulo, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
+| PHPUnit (backend) | 87 | Depósito, saque, saldo insuficiente, valores inválidos e de arredondamento, histórico e filtros, resumo do mês no fuso de São Paulo, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
 | Vitest (frontend) | 102 | Cliente HTTP e sessão expirada, stores, guard de rotas, máscara e leitura de valores, formulários, painel, extrato, toasts e medidor de senha |
 
 A maior parte dos testes de backend é de cenários de falha. O CI também roda Pint, Larastan (nível 6), oxlint, ESLint e checagem de tipos com `vue-tsc`.
