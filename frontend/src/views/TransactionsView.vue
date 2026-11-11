@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { LocationQuery, LocationQueryRaw, LocationQueryValue } from 'vue-router'
 
@@ -19,6 +19,9 @@ const { enviando: carregando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
 const pagina = ref<PaginaDeTransacoes | null>(null)
 const formulario = reactive({ type: '', from: '', to: '' })
+
+// Com filtro ativo, lista vazia quer dizer "nada encontrado", e não conta sem movimentação
+const temFiltro = computed(() => Boolean(rota.query.type || rota.query.from || rota.query.to))
 
 function primeiroTexto(valor: LocationQueryValue | LocationQueryValue[] | undefined): string {
   const texto = Array.isArray(valor) ? valor[0] : valor
@@ -141,7 +144,11 @@ function mudarPagina(numero: number): void {
     <p v-if="carregando && !pagina" class="mt-4 text-slate-500">Carregando...</p>
 
     <template v-if="pagina">
-      <TransactionTable :transacoes="pagina.data" class="mt-4" />
+      <TransactionTable
+        :transacoes="pagina.data"
+        :mensagem-vazia="temFiltro ? 'Nenhuma transação encontrada para esses filtros.' : undefined"
+        class="mt-4"
+      />
       <AppPagination
         class="mt-4"
         :pagina-atual="pagina.meta.current_page"

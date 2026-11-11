@@ -5,6 +5,8 @@ import { formatarCentavos } from '@/utils/money'
 
 defineProps<{
   transacoes: Transacao[]
+  // Texto mostrado quando a lista está vazia
+  mensagemVazia?: string
 }>()
 
 function rotuloDoTipo(transacao: Transacao): string {
@@ -20,7 +22,7 @@ function valorComSinal(transacao: Transacao): string {
 <template>
   <div>
     <p v-if="transacoes.length === 0" class="cartao p-6 text-center text-sm text-slate-500">
-      Nenhuma transação ainda.
+      {{ mensagemVazia ?? 'Nenhuma transação ainda.' }}
     </p>
     <div v-else class="cartao overflow-x-auto">
       <table class="min-w-full text-sm">
