@@ -51,6 +51,14 @@ onMounted(() => wallet.carregarPainel())
           mensagem-de-sucesso="Depósito realizado com sucesso."
           :executar="wallet.depositar"
         />
+        <OperationForm
+          prefixo-do-id="saque"
+          titulo="Sacar"
+          rotulo-do-botao="Sacar"
+          mensagem-de-sucesso="Saque realizado com sucesso."
+          :saldo-disponivel="resumo.balance"
+          :executar="wallet.sacar"
+        />
       </div>
 
       <h2 class="mt-8 text-lg font-semibold text-slate-900">Últimas transações</h2>

@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import AppAlert from '@/components/ui/AppAlert.vue'
 import AppField from '@/components/ui/AppField.vue'
 import { useEnvio } from '@/composables/useEnvio'
-import { lerValorEmReais } from '@/utils/money'
+import { formatarCentavos, lerValorEmReais } from '@/utils/money'
 
 const props = defineProps<{
   prefixoDoId: string
@@ -12,6 +12,8 @@ const props = defineProps<{
   rotuloDoBotao: string
   mensagemDeSucesso: string
   executar: (valorEmReais: number) => Promise<unknown>
+  // Em centavos. Quando informado, valores acima dele são bloqueados antes de chamar a API
+  saldoDisponivel?: number
 }>()
 
 const valor = ref('')
@@ -19,7 +21,21 @@ const sucesso = ref(false)
 const erroLocal = ref<string | null>(null)
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
-const erroDoValor = computed(() => erroLocal.value ?? errosDosCampos.value.amount?.[0])
+const excedeOSaldo = computed(() => {
+  const centavos = lerValorEmReais(valor.value)
+
+  return props.saldoDisponivel !== undefined && centavos !== null && centavos > props.saldoDisponivel
+})
+
+const erroDoValor = computed(() => {
+  if (erroLocal.value) return erroLocal.value
+
+  if (excedeOSaldo.value) {
+    return `Saldo insuficiente. Seu saldo é ${formatarCentavos(props.saldoDisponivel ?? 0)}.`
+  }
+
+  return errosDosCampos.value.amount?.[0]
+})
 
 async function enviarFormulario(): Promise<void> {
   sucesso.value = false
@@ -30,6 +46,8 @@ async function enviarFormulario(): Promise<void> {
     erroLocal.value = 'Informe um valor maior que zero, como 10,50.'
     return
   }
+
+  if (excedeOSaldo.value) return
 
   const deuCerto = await enviar(() => props.executar(centavos / 100))
   if (deuCerto) {
@@ -61,7 +79,7 @@ async function enviarFormulario(): Promise<void> {
 
     <button
       type="submit"
-      :disabled="enviando"
+      :disabled="enviando || excedeOSaldo"
       class="w-full rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
     >
       {{ enviando ? 'Enviando...' : rotuloDoBotao }}

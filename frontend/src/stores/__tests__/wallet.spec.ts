@@ -75,6 +75,18 @@ describe('store da carteira', () => {
     expect(api.buscarResumo).not.toHaveBeenCalled()
   })
 
+  it('saca e recarrega o painel com o novo saldo', async () => {
+    vi.mocked(api.sacar).mockResolvedValue({ ...transacao, type: 'debit' })
+    vi.mocked(api.buscarResumo).mockResolvedValue(resumo)
+    vi.mocked(api.listarTransacoes).mockResolvedValue(pagina)
+    const wallet = useWalletStore()
+
+    await wallet.sacar(5.25)
+
+    expect(api.sacar).toHaveBeenCalledWith(5.25)
+    expect(wallet.resumo).toEqual(resumo)
+  })
+
   it('limpa os dados ao sair', async () => {
     vi.mocked(api.buscarResumo).mockResolvedValue(resumo)
     vi.mocked(api.listarTransacoes).mockResolvedValue(pagina)

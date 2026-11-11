@@ -5,14 +5,15 @@ import OperationForm from '@/components/wallet/OperationForm.vue'
 
 type Executar = (valorEmReais: number) => Promise<unknown>
 
-function montarFormulario(executar: Executar) {
+function montarFormulario(executar: Executar, saldoDisponivel?: number) {
   return mount(OperationForm, {
     props: {
-      prefixoDoId: 'deposito',
-      titulo: 'Depositar',
-      rotuloDoBotao: 'Depositar',
-      mensagemDeSucesso: 'Depósito realizado com sucesso.',
+      prefixoDoId: 'operacao',
+      titulo: 'Operação',
+      rotuloDoBotao: 'Confirmar',
+      mensagemDeSucesso: 'Operação realizada com sucesso.',
       executar,
+      saldoDisponivel,
     },
   })
 }
@@ -31,7 +32,7 @@ describe('OperationForm', () => {
     await flushPromises()
 
     expect(executar).toHaveBeenCalledWith(10.5)
-    expect(wrapper.text()).toContain('Depósito realizado com sucesso.')
+    expect(wrapper.text()).toContain('Operação realizada com sucesso.')
     expect(wrapper.find('input').element.value).toBe('')
   })
 
@@ -54,7 +55,7 @@ describe('OperationForm', () => {
     await flushPromises()
 
     expect(wrapper.find('[role="alert"]').exists()).toBe(true)
-    expect(wrapper.text()).not.toContain('Depósito realizado com sucesso.')
+    expect(wrapper.text()).not.toContain('Operação realizada com sucesso.')
   })
 
   it('desabilita o botão enquanto envia', async () => {
@@ -73,5 +74,28 @@ describe('OperationForm', () => {
     concluir()
     await flushPromises()
     expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('bloqueia o valor acima do saldo sem chamar a API', async () => {
+    const executar = vi.fn<Executar>().mockResolvedValue(undefined)
+    const wrapper = montarFormulario(executar, 1000)
+
+    await enviarValor(wrapper, '10,01')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Saldo insuficiente')
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+    expect(executar).not.toHaveBeenCalled()
+  })
+
+  it('permite sacar exatamente o saldo disponível', async () => {
+    const executar = vi.fn<Executar>().mockResolvedValue(undefined)
+    const wrapper = montarFormulario(executar, 1000)
+
+    await enviarValor(wrapper, '10,00')
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('Saldo insuficiente')
+    expect(executar).toHaveBeenCalledWith(10)
   })
 })
