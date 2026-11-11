@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Wallet } from '@lucide/vue'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import AppAlert from '@/components/ui/AppAlert.vue'
@@ -8,6 +8,7 @@ import AppField from '@/components/ui/AppField.vue'
 import { useEnvio } from '@/composables/useEnvio'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
+import { emailValido } from '@/utils/validacao'
 
 const roteador = useRouter()
 const auth = useAuthStore()
@@ -15,8 +16,12 @@ const toast = useToast()
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
 const formulario = reactive({ email: '', password: '' })
+const erroDoEmail = ref<string | null>(null)
 
 async function entrar(): Promise<void> {
+  erroDoEmail.value = emailValido(formulario.email) ? null : 'Informe um e-mail válido, como nome@exemplo.com.'
+  if (erroDoEmail.value) return
+
   const sucesso = await enviar(() => auth.entrar(formulario))
   if (!sucesso) return
 
@@ -43,7 +48,7 @@ async function entrar(): Promise<void> {
         label="E-mail"
         type="email"
         autocomplete="email"
-        :erro="errosDosCampos.email?.[0]"
+        :erro="erroDoEmail ?? errosDosCampos.email?.[0]"
       />
       <AppField
         id="password"
