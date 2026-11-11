@@ -28,6 +28,13 @@ async function sair() {
           >
             Início
           </RouterLink>
+          <RouterLink
+            :to="{ name: 'transactions' }"
+            class="text-sm text-slate-600 hover:text-slate-900"
+            active-class="font-medium text-slate-900"
+          >
+            Extrato
+          </RouterLink>
         </nav>
         <div class="flex items-center gap-4 text-sm">
           <span class="text-slate-600">{{ auth.usuario?.name }}</span>

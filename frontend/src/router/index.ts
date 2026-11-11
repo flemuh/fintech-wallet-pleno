@@ -19,7 +19,14 @@ export function criarRoteador(historico: RouterHistory) {
         path: '/',
         component: AppLayout,
         meta: { requerAutenticacao: true },
-        children: [{ path: '', name: 'home', component: DashboardView }],
+        children: [
+          { path: '', name: 'home', component: DashboardView },
+          {
+            path: 'transactions',
+            name: 'transactions',
+            component: () => import('@/views/TransactionsView.vue'),
+          },
+        ],
       },
       {
         path: '/login',
