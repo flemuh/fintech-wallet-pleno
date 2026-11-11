@@ -9,17 +9,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
 
-Route::post('/auth/register', [AuthController::class, 'registrar']);
-Route::post('/auth/login', [AuthController::class, 'entrar'])->middleware('throttle:5,1');
+Route::post('/auth/register', [AuthController::class, 'registrar'])->middleware('throttle:registro');
+Route::post('/auth/login', [AuthController::class, 'entrar'])->middleware('throttle:login');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:carteira'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'sair']);
-
-    Route::post('/wallet/deposits', [DepositController::class, 'store']);
-
-    Route::post('/wallet/withdrawals', [WithdrawalController::class, 'store']);
 
     Route::get('/wallet/transactions', [TransactionController::class, 'index']);
 
     Route::get('/wallet', [WalletController::class, 'show']);
+
+    // Depósito e saque têm um limite próprio, mais baixo
+    Route::middleware('throttle:operacoes')->group(function () {
+        Route::post('/wallet/deposits', [DepositController::class, 'store']);
+
+        Route::post('/wallet/withdrawals', [WithdrawalController::class, 'store']);
+    });
 });
