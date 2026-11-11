@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownToLine, ArrowRight, ArrowUpFromLine, Wallet } from 'lucide-vue-next'
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, Minus, Plus, Wallet } from 'lucide-vue-next'
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
@@ -24,43 +24,49 @@ onMounted(() => wallet.carregarPainel())
     <p v-else-if="carregando && !resumo" class="mt-4 text-slate-500">Carregando...</p>
 
     <template v-if="resumo">
-      <dl class="mt-6 grid gap-4 sm:grid-cols-3">
-        <div class="rounded-lg border border-slate-200 bg-white p-4">
-          <dt class="flex items-center gap-2 text-sm text-slate-500">
-            <Wallet class="size-4 text-slate-400" aria-hidden="true" />
+      <dl class="mt-6 grid gap-4 md:grid-cols-[1.3fr_1fr_1fr]">
+        <div class="rounded-2xl bg-violet-800 p-5 text-white shadow-sm">
+          <dt class="flex items-center gap-2 text-sm text-violet-200">
+            <Wallet class="size-4" aria-hidden="true" />
             Saldo atual
           </dt>
-          <dd class="mt-1 text-2xl font-semibold text-slate-900">
+          <dd class="mt-2 text-3xl font-semibold tracking-tight">
             {{ formatarCentavos(resumo.balance) }}
           </dd>
         </div>
-        <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <div class="cartao p-5">
           <dt class="flex items-center gap-2 text-sm text-slate-500">
-            <ArrowDownToLine class="size-4 text-emerald-500" aria-hidden="true" />
+            <span class="flex size-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+              <ArrowDownLeft class="size-4" aria-hidden="true" />
+            </span>
             Depositado no mês
           </dt>
-          <dd class="mt-1 text-2xl font-semibold text-emerald-600">
+          <dd class="mt-3 text-xl font-semibold text-emerald-700">
             {{ formatarCentavos(resumo.month_credit) }}
           </dd>
         </div>
-        <div class="rounded-lg border border-slate-200 bg-white p-4">
+        <div class="cartao p-5">
           <dt class="flex items-center gap-2 text-sm text-slate-500">
-            <ArrowUpFromLine class="size-4 text-red-500" aria-hidden="true" />
+            <span class="flex size-8 items-center justify-center rounded-full bg-red-50 text-red-700">
+              <ArrowUpRight class="size-4" aria-hidden="true" />
+            </span>
             Sacado no mês
           </dt>
-          <dd class="mt-1 text-2xl font-semibold text-red-600">
+          <dd class="mt-3 text-xl font-semibold text-red-700">
             {{ formatarCentavos(resumo.month_debit) }}
           </dd>
         </div>
       </dl>
 
-      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
         <OperationForm
           prefixo-do-id="deposito"
           titulo="Depositar"
           rotulo-do-botao="Depositar"
           mensagem-de-sucesso="Depósito realizado com sucesso."
-          :icone="ArrowDownToLine"
+          destaque="primario"
+          dica="Digite só os números: 1050 vira 10,50"
+          :icone="Plus"
           :executar="wallet.depositar"
         />
         <OperationForm
@@ -68,7 +74,9 @@ onMounted(() => wallet.carregarPainel())
           titulo="Sacar"
           rotulo-do-botao="Sacar"
           mensagem-de-sucesso="Saque realizado com sucesso."
-          :icone="ArrowUpFromLine"
+          destaque="secundario"
+          :dica="`Disponível: ${formatarCentavos(resumo.balance)}`"
+          :icone="Minus"
           :saldo-disponivel="resumo.balance"
           :executar="wallet.sacar"
         />
@@ -78,7 +86,7 @@ onMounted(() => wallet.carregarPainel())
         <h2 class="text-lg font-semibold text-slate-900">Últimas transações</h2>
         <RouterLink
           :to="{ name: 'transactions' }"
-          class="flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+          class="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-medium text-violet-700 transition-colors hover:bg-violet-50 hover:text-violet-900"
         >
           Ver extrato completo
           <ArrowRight class="size-4" aria-hidden="true" />

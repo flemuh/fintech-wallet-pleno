@@ -6,6 +6,9 @@ const props = defineProps<{
   autocomplete?: string
   dica?: string
   erro?: string
+  placeholder?: string
+  // Texto fixo dentro do campo, à esquerda (ex.: "R$")
+  prefixo?: string
   // Transforma o texto a cada digitação (ex.: máscara de valor em reais)
   mascara?: (texto: string) => string
 }>()
@@ -26,16 +29,28 @@ function aoDigitar(evento: Event): void {
 <template>
   <div>
     <label :for="id" class="block text-sm font-medium text-slate-700">{{ label }}</label>
-    <input
-      :id="id"
-      :value="valor"
-      :type="type ?? 'text'"
-      :autocomplete="autocomplete"
-      :aria-invalid="erro ? 'true' : undefined"
-      class="mt-1 block w-full rounded border px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-      :class="erro ? 'border-red-500' : 'border-slate-300'"
-      @input="aoDigitar"
-    />
+    <div class="relative mt-1">
+      <span
+        v-if="prefixo"
+        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-500"
+      >
+        {{ prefixo }}
+      </span>
+      <input
+        :id="id"
+        :value="valor"
+        :type="type ?? 'text'"
+        :autocomplete="autocomplete"
+        :placeholder="placeholder"
+        :aria-invalid="erro ? 'true' : undefined"
+        class="block w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors focus:border-violet-600 focus:ring-4 focus:ring-violet-100 focus:outline-none"
+        :class="[
+          erro ? 'border-red-500' : 'border-slate-300 hover:border-violet-300',
+          prefixo ? 'h-11 pl-10 text-lg' : '',
+        ]"
+        @input="aoDigitar"
+      />
+    </div>
     <p v-if="erro" class="mt-1 text-sm text-red-600">{{ erro }}</p>
     <p v-else-if="dica" class="mt-1 text-sm text-slate-500">{{ dica }}</p>
   </div>

@@ -13,17 +13,24 @@ const props = defineProps<{
   rotuloDoBotao: string
   mensagemDeSucesso: string
   executar: (valorEmReais: number) => Promise<unknown>
-  // Componente de ícone exibido no botão (opcional)
+  // Ação principal usa o botão cheio; a secundária, o botão com contorno
+  destaque?: 'primario' | 'secundario'
+  // Componente de ícone exibido ao lado do título (opcional)
   icone?: Component
+  // Texto de ajuda embaixo do campo
+  dica?: string
   // Em centavos. Quando informado, valores acima dele são bloqueados antes de chamar a API
   saldoDisponivel?: number
 }>()
 
 const valor = ref('')
-
 const erroLocal = ref<string | null>(null)
 const toast = useToast()
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
+
+const classeDoBotao = computed(() =>
+  props.destaque === 'secundario' ? 'botao-secundario' : 'botao-primario',
+)
 
 const excedeOSaldo = computed(() => {
   const centavos = lerValorEmReais(valor.value)
@@ -63,29 +70,30 @@ async function enviarFormulario(): Promise<void> {
 </script>
 
 <template>
-  <form
-    class="space-y-4 rounded-lg border border-slate-200 bg-white p-4"
-    novalidate
-    @submit.prevent="enviarFormulario"
-  >
-    <h2 class="text-lg font-semibold text-slate-900">{{ titulo }}</h2>
+  <form class="cartao space-y-4 p-5" novalidate @submit.prevent="enviarFormulario">
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+      <component :is="icone" v-if="icone" class="size-5 text-violet-700" aria-hidden="true" />
+      {{ titulo }}
+    </h2>
 
     <AppField
       :id="`${prefixoDoId}-valor`"
       v-model="valor"
       label="Valor (R$)"
-      :mascara="mascararReais"
+      prefixo="R$"
+      placeholder="0,00"
       autocomplete="off"
-      dica="Exemplo: 10,50"
+      :dica="dica ?? 'Exemplo: 10,50'"
+      :mascara="mascararReais"
       :erro="erroDoValor"
     />
 
     <button
       type="submit"
       :disabled="enviando || excedeOSaldo"
-      class="flex w-full items-center justify-center gap-2 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+      class="w-full"
+      :class="classeDoBotao"
     >
-      <component :is="icone" v-if="icone && !enviando" class="size-4" aria-hidden="true" />
       {{ enviando ? 'Enviando...' : rotuloDoBotao }}
     </button>
   </form>

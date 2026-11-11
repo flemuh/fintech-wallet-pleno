@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Wallet } from 'lucide-vue-next'
 import { reactive } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
@@ -22,10 +23,11 @@ async function entrar(): Promise<void> {
 <template>
   <main class="flex min-h-screen items-center justify-center bg-slate-50 p-4">
     <form
-      class="w-full max-w-sm space-y-4 rounded-lg bg-white p-6 shadow"
+      class="cartao w-full max-w-sm space-y-4 p-6"
       novalidate
       @submit.prevent="entrar"
     >
+      <p class="flex items-center gap-2 font-semibold text-violet-800"><span class="flex size-8 items-center justify-center rounded-lg bg-violet-700 text-white"><Wallet class="size-4" aria-hidden="true" /></span>Fintech Wallet</p>
       <h1 class="text-xl font-semibold text-slate-900">Entrar</h1>
 
       <AppAlert v-if="erroGeral" tipo="erro">{{ erroGeral }}</AppAlert>
@@ -50,14 +52,14 @@ async function entrar(): Promise<void> {
       <button
         type="submit"
         :disabled="enviando"
-        class="w-full rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+        class="botao-primario w-full"
       >
         {{ enviando ? 'Entrando...' : 'Entrar' }}
       </button>
 
       <p class="text-center text-sm text-slate-600">
         Não tem conta?
-        <RouterLink :to="{ name: 'register' }" class="text-indigo-600 hover:underline">
+        <RouterLink :to="{ name: 'register' }" class="font-medium text-violet-700 hover:underline">
           Criar conta
         </RouterLink>
       </p>

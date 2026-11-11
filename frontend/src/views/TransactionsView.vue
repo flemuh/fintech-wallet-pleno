@@ -84,7 +84,7 @@ function mudarPagina(numero: number): void {
     <h1 class="text-2xl font-semibold text-slate-900">Extrato</h1>
 
     <form
-      class="mt-6 grid gap-4 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-4 sm:items-end"
+      class="cartao mt-6 grid gap-4 p-4 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto] sm:items-end"
       novalidate
       @submit.prevent="aplicarFiltros"
     >
@@ -93,7 +93,7 @@ function mudarPagina(numero: number): void {
         <select
           id="filtro-tipo"
           v-model="formulario.type"
-          class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors hover:border-violet-300 focus:border-violet-600 focus:ring-4 focus:ring-violet-100 focus:outline-none"
         >
           <option value="">Todos</option>
           <option value="credit">Depósitos (crédito)</option>
@@ -123,13 +123,13 @@ function mudarPagina(numero: number): void {
         <button
           type="submit"
           :disabled="carregando"
-          class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          class="botao-primario py-2"
         >
           Filtrar
         </button>
         <button
           type="button"
-          class="rounded border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+          class="botao-secundario py-2"
           @click="limparFiltros"
         >
           Limpar

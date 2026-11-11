@@ -1,1 +1,16 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* Classes compartilhadas pelas telas, para não repetir a mesma lista de utilitários */
+@layer components {
+  .botao-primario {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-800 focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .botao-secundario {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-violet-700 bg-white px-4 py-2.5 text-sm font-semibold text-violet-800 transition-colors hover:bg-violet-50 focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white;
+  }
+
+  .cartao {
+    @apply rounded-2xl border border-violet-100 bg-white shadow-sm;
+  }
+}

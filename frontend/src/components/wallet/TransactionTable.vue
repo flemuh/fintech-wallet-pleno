@@ -19,28 +19,45 @@ function valorComSinal(transacao: Transacao): string {
 
 <template>
   <div>
-    <p v-if="transacoes.length === 0" class="text-sm text-slate-500">Nenhuma transação ainda.</p>
-    <div v-else class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+    <p v-if="transacoes.length === 0" class="cartao p-6 text-center text-sm text-slate-500">
+      Nenhuma transação ainda.
+    </p>
+    <div v-else class="cartao overflow-x-auto">
       <table class="min-w-full text-sm">
-        <thead class="bg-slate-50 text-left text-slate-500">
+        <thead class="bg-violet-50 text-left text-violet-900">
           <tr>
-            <th class="px-4 py-2 font-medium">Data</th>
-            <th class="px-4 py-2 font-medium">Tipo</th>
-            <th class="px-4 py-2 text-right font-medium">Valor</th>
-            <th class="px-4 py-2 text-right font-medium">Saldo após</th>
+            <th class="px-4 py-3 font-medium">Data</th>
+            <th class="px-4 py-3 font-medium">Tipo</th>
+            <th class="px-4 py-3 text-right font-medium">Valor</th>
+            <th class="px-4 py-3 text-right font-medium">Saldo após</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
-          <tr v-for="transacao in transacoes" :key="transacao.id">
-            <td class="px-4 py-2 text-slate-600">{{ formatarDataEHora(transacao.created_at) }}</td>
-            <td class="px-4 py-2 text-slate-900">{{ rotuloDoTipo(transacao) }}</td>
+        <tbody class="divide-y divide-violet-100">
+          <tr
+            v-for="transacao in transacoes"
+            :key="transacao.id"
+            class="transition-colors odd:bg-white even:bg-violet-50/40 hover:bg-violet-100/70"
+          >
+            <td class="px-4 py-3 text-slate-600">{{ formatarDataEHora(transacao.created_at) }}</td>
+            <td class="px-4 py-3">
+              <span
+                class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                :class="
+                  transacao.type === 'credit'
+                    ? 'bg-emerald-50 text-emerald-800'
+                    : 'bg-red-50 text-red-800'
+                "
+              >
+                {{ rotuloDoTipo(transacao) }}
+              </span>
+            </td>
             <td
-              class="px-4 py-2 text-right font-medium"
-              :class="transacao.type === 'credit' ? 'text-emerald-600' : 'text-red-600'"
+              class="px-4 py-3 text-right font-medium"
+              :class="transacao.type === 'credit' ? 'text-emerald-700' : 'text-red-700'"
             >
               {{ valorComSinal(transacao) }}
             </td>
-            <td class="px-4 py-2 text-right text-slate-600">
+            <td class="px-4 py-3 text-right text-slate-600">
               {{ formatarCentavos(transacao.balance_after) }}
             </td>
           </tr>
