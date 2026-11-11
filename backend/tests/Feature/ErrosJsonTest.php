@@ -38,6 +38,15 @@ class ErrosJsonTest extends TestCase
             ->assertJson(['code' => 'method_not_allowed']);
     }
 
+    public function test_erro_de_validacao_retorna_422_com_codigo_e_erros_por_campo(): void
+    {
+        $this->postJson('/api/auth/register', [])
+            ->assertStatus(422)
+            ->assertJsonStructure(['message', 'code', 'errors'])
+            ->assertJsonPath('code', 'validation_failed')
+            ->assertJsonValidationErrors(['name', 'email', 'password']);
+    }
+
     public function test_registro_e_bloqueado_depois_de_cinco_tentativas_por_minuto(): void
     {
         // IP próprio do teste, para não misturar a contagem com outros testes

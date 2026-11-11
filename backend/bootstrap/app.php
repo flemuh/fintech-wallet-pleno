@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -29,8 +30,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Toda rota da API responde JSON, mesmo sem o cabeçalho Accept
         $exceptions->shouldRenderJsonWhen($ehApi);
 
-        // Formato único de erro: { message, code }. A validação (422) mantém o padrão
-        // do Laravel (message + errors), e as exceções de domínio têm o próprio render().
+        // Formato único de erro: { message, code }. A validação acrescenta o campo errors
+        // (detalhe por campo), e as exceções de domínio têm o próprio render().
         $erro = fn (string $mensagem, string $codigo, int $status, array $cabecalhos = []): JsonResponse => response()->json(['message' => $mensagem, 'code' => $codigo], $status, $cabecalhos);
 
         $exceptions->render(fn (AuthenticationException $e, Request $request) => $ehApi($request)
@@ -48,5 +49,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Mantém os cabeçalhos do limitador (Retry-After e X-RateLimit-*)
         $exceptions->render(fn (TooManyRequestsHttpException $e, Request $request) => $ehApi($request)
             ? $erro('Muitas requisições. Tente novamente em instantes.', 'too_many_requests', 429, $e->getHeaders())
+            : null);
+
+        $exceptions->render(fn (ValidationException $e, Request $request) => $ehApi($request)
+            ? response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'validation_failed',
+                'errors' => $e->errors(),
+            ], $e->status)
             : null);
     })->create();
