@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FileText, House, LogOut, Wallet } from 'lucide-vue-next'
+import { FileText, House, LogOut, Wallet } from '@lucide/vue'
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Wallet } from 'lucide-vue-next'
+import { Wallet } from '@lucide/vue'
 import { reactive } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 

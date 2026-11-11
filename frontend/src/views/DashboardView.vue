@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, Minus, Plus, Wallet } from 'lucide-vue-next'
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, Minus, Plus, Wallet } from '@lucide/vue'
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
