@@ -15,6 +15,13 @@ class Wallet extends Model
 
     protected $fillable = ['user_id', 'balance'];
 
+    protected function casts(): array
+    {
+        return [
+            'balance' => 'integer', // em centavos
+        ];
+    }
+
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {

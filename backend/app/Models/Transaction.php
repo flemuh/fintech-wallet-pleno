@@ -22,6 +22,8 @@ class Transaction extends Model
     {
         return [
             'type' => TransactionType::class,
+            'amount' => 'integer',        // em centavos
+            'balance_after' => 'integer', // em centavos
         ];
     }
 
