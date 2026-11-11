@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { CircleCheck, CircleX, Info, TriangleAlert, X } from 'lucide-vue-next'
+import type { Component } from 'vue'
+
 import { useToast } from '@/composables/useToast'
 import type { TipoDeToast } from '@/composables/useToast'
 
@@ -10,28 +13,36 @@ const ESTILOS: Record<TipoDeToast, string> = {
   info: 'bg-sky-600',
   alerta: 'bg-amber-500',
 }
+
+const ICONES: Record<TipoDeToast, Component> = {
+  sucesso: CircleCheck,
+  erro: CircleX,
+  info: Info,
+  alerta: TriangleAlert,
+}
 </script>
 
 <template>
   <div
-    class="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-2 px-4"
+    class="pointer-events-none fixed top-4 right-4 z-50 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2"
     aria-live="polite"
   >
     <div
       v-for="toast in toasts"
       :key="toast.id"
       :role="toast.tipo === 'erro' ? 'alert' : 'status'"
-      class="pointer-events-auto flex w-full max-w-sm items-start justify-between gap-3 rounded px-4 py-3 text-sm text-white shadow-lg"
+      class="pointer-events-auto flex items-start gap-2 rounded-md px-3 py-2 text-sm text-white shadow-lg"
       :class="ESTILOS[toast.tipo]"
     >
-      <span>{{ toast.mensagem }}</span>
+      <component :is="ICONES[toast.tipo]" class="size-5 shrink-0" aria-hidden="true" />
+      <span class="flex-1">{{ toast.mensagem }}</span>
       <button
         type="button"
         aria-label="Fechar"
-        class="leading-none font-bold"
+        class="rounded p-0.5 hover:bg-black/10"
         @click="remover(toast.id)"
       >
-        ×
+        <X class="size-4" aria-hidden="true" />
       </button>
     </div>
   </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import type { Component } from 'vue'
 
 import AppField from '@/components/ui/AppField.vue'
 import { useEnvio } from '@/composables/useEnvio'
@@ -12,6 +13,8 @@ const props = defineProps<{
   rotuloDoBotao: string
   mensagemDeSucesso: string
   executar: (valorEmReais: number) => Promise<unknown>
+  // Componente de ícone exibido no botão (opcional)
+  icone?: Component
   // Em centavos. Quando informado, valores acima dele são bloqueados antes de chamar a API
   saldoDisponivel?: number
 }>()
@@ -78,8 +81,9 @@ async function enviarFormulario(): Promise<void> {
     <button
       type="submit"
       :disabled="enviando || excedeOSaldo"
-      class="w-full rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+      class="flex w-full items-center justify-center gap-2 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
     >
+      <component :is="icone" v-if="icone && !enviando" class="size-4" aria-hidden="true" />
       {{ enviando ? 'Enviando...' : rotuloDoBotao }}
     </button>
   </form>
