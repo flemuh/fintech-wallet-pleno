@@ -18,7 +18,7 @@ concurrency:
 jobs:
   backend:
     name: Backend (Laravel)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
@@ -48,7 +48,7 @@ jobs:
       DB_PASSWORD: secret
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -56,7 +56,7 @@ jobs:
           coverage: none
 
       - name: Cache do Composer
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('backend/composer.lock') }}
@@ -84,15 +84,15 @@ jobs:
 
   frontend:
     name: Frontend (Vue)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -112,7 +112,7 @@ jobs:
     needs: [backend, frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Deploy via SSH
         env:
