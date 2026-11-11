@@ -15,8 +15,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="p-8">
+  <section>
     <h1 class="text-3xl font-bold text-emerald-600">Fintech Wallet</h1>
     <p class="mt-2 text-gray-600">API: {{ apiStatus }}</p>
-  </main>
+  </section>
 </template>
