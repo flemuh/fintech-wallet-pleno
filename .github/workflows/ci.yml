@@ -80,7 +80,14 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=1G
 
       - name: Testes
-        run: php artisan test
+        run: php artisan test --log-junit junit.xml
+
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          php -r '$s = simplexml_load_file("junit.xml")->testsuite;
+          printf("## PHPUnit\n\n- Testes: %d\n- Asserções: %d\n- Falhas: %d\n- Erros: %d\n- Tempo: %.1fs\n",
+            $s["tests"], $s["assertions"], $s["failures"], $s["errors"], $s["time"]);' >> "$GITHUB_STEP_SUMMARY"
 
   frontend:
     name: Frontend (Vue)
