@@ -21,6 +21,7 @@ class TransactionIndexRequest extends FormRequest
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'page' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -32,6 +33,7 @@ class TransactionIndexRequest extends FormRequest
             'from' => 'data inicial',
             'to' => 'data final',
             'per_page' => 'itens por página',
+            'page' => 'página',
         ];
     }
 }
