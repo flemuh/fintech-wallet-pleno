@@ -24,16 +24,17 @@ describe('useToast', () => {
     ])
   })
 
-  it('some sozinho depois da duração do tipo', () => {
+  it('todos os tipos somem sozinhos depois de 3 segundos', () => {
     const toast = useToast()
 
     toast.sucesso('Salvo')
     toast.erro('Falhou')
+    toast.alerta('Atenção')
 
-    vi.advanceTimersByTime(4000)
-    expect(toast.toasts.value.map((item) => item.tipo)).toEqual(['erro'])
+    vi.advanceTimersByTime(2999)
+    expect(toast.toasts.value).toHaveLength(3)
 
-    vi.advanceTimersByTime(2000)
+    vi.advanceTimersByTime(1)
     expect(toast.toasts.value).toHaveLength(0)
   })
 

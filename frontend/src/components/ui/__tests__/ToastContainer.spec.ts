@@ -33,4 +33,15 @@ describe('ToastContainer', () => {
 
     expect(wrapper.text()).not.toContain('Sessão expirada')
   })
+
+  it('anuncia o erro com role alert e o sucesso com role status', async () => {
+    const wrapper = mount(ToastContainer)
+
+    useToast().erro('Falhou')
+    useToast().sucesso('Salvo')
+    await nextTick()
+
+    expect(wrapper.findAll('[role="alert"]')).toHaveLength(1)
+    expect(wrapper.findAll('[role="status"]')).toHaveLength(1)
+  })
 })

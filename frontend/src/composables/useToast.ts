@@ -8,13 +8,8 @@ export interface Toast {
   mensagem: string
 }
 
-// Erros ficam mais tempo na tela, porque dão mais trabalho de ler
-const DURACAO_EM_MS: Record<TipoDeToast, number> = {
-  sucesso: 4000,
-  info: 4000,
-  alerta: 5000,
-  erro: 6000,
-}
+// Todos os tipos somem no mesmo tempo, para o comportamento ser previsível
+const DURACAO_EM_MS = 3000
 
 // O estado é do módulo, não de um componente: qualquer tela ou o main.ts pode disparar um toast
 const toasts = ref<Toast[]>([])
@@ -28,7 +23,7 @@ function mostrar(tipo: TipoDeToast, mensagem: string): void {
   const id = proximoId++
 
   toasts.value = [...toasts.value, { id, tipo, mensagem }]
-  setTimeout(() => remover(id), DURACAO_EM_MS[tipo])
+  setTimeout(() => remover(id), DURACAO_EM_MS)
 }
 
 export function useToast() {
