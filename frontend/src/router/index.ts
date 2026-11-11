@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouterHistory } from 'vue-router'
 
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
-import HomeView from '@/views/HomeView.vue'
+import DashboardView from '@/views/DashboardView.vue'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -19,7 +19,7 @@ export function criarRoteador(historico: RouterHistory) {
         path: '/',
         component: AppLayout,
         meta: { requerAutenticacao: true },
-        children: [{ path: '', name: 'home', component: HomeView }],
+        children: [{ path: '', name: 'home', component: DashboardView }],
       },
       {
         path: '/login',

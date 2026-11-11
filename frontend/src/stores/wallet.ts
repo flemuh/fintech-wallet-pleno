@@ -1,0 +1,42 @@
+import { ref } from 'vue'
+import { defineStore } from 'pinia'
+
+import { buscarResumo, listarTransacoes } from '@/api/wallet'
+import type { ResumoDaCarteira, Transacao } from '@/api/wallet'
+import { lerErroDaApi } from '@/api/http'
+
+const TRANSACOES_NO_PAINEL = 5
+
+export const useWalletStore = defineStore('wallet', () => {
+  const resumo = ref<ResumoDaCarteira | null>(null)
+  const recentes = ref<Transacao[]>([])
+  const carregando = ref(false)
+  const erro = ref<string | null>(null)
+
+  async function carregarPainel(): Promise<void> {
+    carregando.value = true
+    erro.value = null
+
+    try {
+      const [novoResumo, pagina] = await Promise.all([
+        buscarResumo(),
+        listarTransacoes({ per_page: TRANSACOES_NO_PAINEL }),
+      ])
+      resumo.value = novoResumo
+      recentes.value = pagina.data
+    } catch (falha) {
+      erro.value = lerErroDaApi(falha).message
+    } finally {
+      carregando.value = false
+    }
+  }
+
+  // Chamado ao sair: o próximo usuário não pode ver os dados do anterior
+  function limpar(): void {
+    resumo.value = null
+    recentes.value = []
+    erro.value = null
+  }
+
+  return { resumo, recentes, carregando, erro, carregarPainel, limpar }
+})
