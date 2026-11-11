@@ -1,0 +1,60 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AuthLoginTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function criarUsuario(): User
+    {
+        return User::factory()->create([
+            'email' => 'ana@example.com',
+            'password' => 'senha1234',
+        ]);
+    }
+
+    public function test_login_com_credenciais_corretas_retorna_token(): void
+    {
+        $this->criarUsuario();
+
+        $this->postJson('/api/auth/login', ['email' => 'ana@example.com', 'password' => 'senha1234'])
+            ->assertOk()
+            ->assertJsonStructure(['user' => ['id', 'name', 'email'], 'token']);
+    }
+
+    public function test_login_com_senha_errada_retorna_422(): void
+    {
+        $this->criarUsuario();
+
+        $this->postJson('/api/auth/login', ['email' => 'ana@example.com', 'password' => 'errada123'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('email');
+    }
+
+    public function test_login_com_email_inexistente_retorna_422(): void
+    {
+        $this->postJson('/api/auth/login', ['email' => 'ninguem@example.com', 'password' => 'senha1234'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('email');
+    }
+
+    public function test_logout_revoga_o_token(): void
+    {
+        $usuario = $this->criarUsuario();
+        $token = $usuario->createToken('api')->plainTextToken;
+
+        $this->withToken($token)->postJson('/api/auth/logout')->assertNoContent();
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_rota_protegida_sem_token_retorna_401(): void
+    {
+        $this->postJson('/api/auth/logout')->assertUnauthorized();
+    }
+}
