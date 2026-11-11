@@ -19,6 +19,9 @@ class WalletService
 {
     use DetectsConcurrencyErrors;
 
+    /** Fuso em que o usuário enxerga "o mês atual". */
+    private const FUSO_DO_NEGOCIO = 'America/Sao_Paulo';
+
     public function depositar(User $usuario, int $valorEmCentavos): Transaction
     {
         return $this->aplicar($usuario, TransactionType::Credit, $valorEmCentavos);
@@ -50,26 +53,30 @@ class WalletService
     }
 
     /**
-     * Saldo atual e totais da carteira, em centavos, calculados numa única consulta.
+     * Saldo atual e totais depositado e sacado no mês corrente, em centavos, numa única consulta.
+     * O mês é o de São Paulo, convertido para UTC (fuso em que o banco guarda as datas).
      *
-     * @return array{balance: int, total_credit: int, total_debit: int, transactions_count: int}
+     * @return array{balance: int, month_credit: int, month_debit: int}
      */
     public function resumo(User $usuario): array
     {
         $carteira = Wallet::where('user_id', $usuario->id)->firstOrFail();
 
+        $inicioDoMes = Carbon::now(self::FUSO_DO_NEGOCIO)->startOfMonth();
+        $inicioDoProximoMes = $inicioDoMes->copy()->addMonth();
+
         $totais = DB::table('transactions')
             ->where('wallet_id', $carteira->id)
-            ->selectRaw('count(*) as quantidade')
-            ->selectRaw("coalesce(sum(amount) filter (where type = 'credit'), 0) as total_credito")
-            ->selectRaw("coalesce(sum(amount) filter (where type = 'debit'), 0) as total_debito")
+            ->where('created_at', '>=', $inicioDoMes->copy()->utc())
+            ->where('created_at', '<', $inicioDoProximoMes->copy()->utc())
+            ->selectRaw("coalesce(sum(amount) filter (where type = 'credit'), 0) as credito_mes")
+            ->selectRaw("coalesce(sum(amount) filter (where type = 'debit'), 0) as debito_mes")
             ->first();
 
         return [
             'balance' => $carteira->balance,
-            'total_credit' => (int) ($totais->total_credito ?? 0),
-            'total_debit' => (int) ($totais->total_debito ?? 0),
-            'transactions_count' => (int) ($totais->quantidade ?? 0),
+            'month_credit' => (int) ($totais->credito_mes ?? 0),
+            'month_debit' => (int) ($totais->debito_mes ?? 0),
         ];
     }
 
