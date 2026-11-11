@@ -6,17 +6,22 @@ import { RouterLink, useRouter } from 'vue-router'
 import AppAlert from '@/components/ui/AppAlert.vue'
 import AppField from '@/components/ui/AppField.vue'
 import { useEnvio } from '@/composables/useEnvio'
+import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 
 const roteador = useRouter()
 const auth = useAuthStore()
+const toast = useToast()
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
 const formulario = reactive({ name: '', email: '', password: '' })
 
 async function registrar(): Promise<void> {
   const sucesso = await enviar(() => auth.registrar(formulario))
-  if (sucesso) await roteador.push({ name: 'home' })
+  if (!sucesso) return
+
+  await roteador.push({ name: 'home' })
+  toast.sucesso(`Conta criada. Bem-vindo, ${auth.usuario?.name ?? ''}.`)
 }
 </script>
 

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import * as api from '@/api/auth'
+import { useToast } from '@/composables/useToast'
 import LoginView from '@/views/LoginView.vue'
 
 vi.mock('@/api/auth')
@@ -43,6 +44,7 @@ describe('tela de login', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.resetAllMocks()
+    useToast().limpar()
   })
 
   it('mostra o erro do campo quando a API recusa as credenciais', async () => {
@@ -59,6 +61,7 @@ describe('tela de login', () => {
     await flushPromises()
 
     expect(tela.text()).toContain('Credenciais inválidas.')
+    expect(useToast().toasts.value).toHaveLength(0)
   })
 
   it('mostra alerta geral quando o erro não é de validação', async () => {
@@ -76,7 +79,7 @@ describe('tela de login', () => {
     expect(tela.find('[role="alert"]').text()).toContain('Muitas requisições')
   })
 
-  it('login aceito leva para a página inicial', async () => {
+  it('login aceito leva para a página inicial com toast de boas-vindas', async () => {
     vi.mocked(api.entrar).mockResolvedValue({
       user: { id: 1, name: 'Ana', email: 'ana@exemplo.com' },
       token: 'token-123',
@@ -87,6 +90,9 @@ describe('tela de login', () => {
     await flushPromises()
 
     expect(roteador.currentRoute.value.name).toBe('home')
+    expect(useToast().toasts.value.map((item) => [item.tipo, item.mensagem])).toEqual([
+      ['sucesso', 'Bem-vindo, Ana.'],
+    ])
   })
 
   it('desabilita o botão enquanto envia', async () => {
