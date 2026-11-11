@@ -20,3 +20,17 @@ export function lerValorEmReais(texto: string): number | null {
 
   return Number.isSafeInteger(centavos) ? centavos : null
 }
+
+// Máscara de real para o campo de valor: só os dígitos contam e entram da direita para a esquerda,
+// então "1050" vira "10,50". O limite de 12 dígitos evita número maior que o JavaScript representa;
+// o teto de verdade é validado pela API
+export function mascararReais(texto: string): string {
+  const digitos = texto.replace(/\D/g, '').slice(0, 12)
+
+  if (digitos === '') return ''
+
+  return (Number(digitos) / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
