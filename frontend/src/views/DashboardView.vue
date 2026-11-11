@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import AppAlert from '@/components/ui/AppAlert.vue'
+import OperationForm from '@/components/wallet/OperationForm.vue'
 import TransactionTable from '@/components/wallet/TransactionTable.vue'
 import { useWalletStore } from '@/stores/wallet'
 import { formatarCentavos } from '@/utils/money'
@@ -41,6 +42,16 @@ onMounted(() => wallet.carregarPainel())
           </dd>
         </div>
       </dl>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        <OperationForm
+          prefixo-do-id="deposito"
+          titulo="Depositar"
+          rotulo-do-botao="Depositar"
+          mensagem-de-sucesso="Depósito realizado com sucesso."
+          :executar="wallet.depositar"
+        />
+      </div>
 
       <h2 class="mt-8 text-lg font-semibold text-slate-900">Últimas transações</h2>
       <TransactionTable :transacoes="recentes" class="mt-3" />

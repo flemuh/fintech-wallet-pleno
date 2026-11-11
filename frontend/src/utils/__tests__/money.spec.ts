@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { centavosParaValorDaApi, formatarCentavos, lerValorEmReais } from '@/utils/money'
+import { formatarCentavos, lerValorEmReais } from '@/utils/money'
 
 describe('formatarCentavos', () => {
   it('formata centavos em reais no padrão brasileiro', () => {
@@ -27,14 +27,5 @@ describe('lerValorEmReais', () => {
     expect(lerValorEmReais('10.50')).toBeNull()
     expect(lerValorEmReais('-5')).toBeNull()
     expect(lerValorEmReais('1,2,3')).toBeNull()
-  })
-})
-
-describe('centavosParaValorDaApi', () => {
-  it('gera o texto em reais esperado pela API', () => {
-    expect(centavosParaValorDaApi(123456)).toBe('1234.56')
-    expect(centavosParaValorDaApi(1050)).toBe('10.50')
-    expect(centavosParaValorDaApi(5)).toBe('0.05')
-    expect(centavosParaValorDaApi(0)).toBe('0.00')
   })
 })

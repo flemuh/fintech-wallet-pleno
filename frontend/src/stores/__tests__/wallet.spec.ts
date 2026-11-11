@@ -8,16 +8,16 @@ vi.mock('@/api/wallet')
 
 const resumo = { balance: 49610, month_credit: 28575, month_debit: 15325 }
 
+const transacao = {
+  id: 1,
+  type: 'credit' as const,
+  amount: 1000,
+  balance_after: 1000,
+  created_at: '2026-06-15T15:30:00+00:00',
+}
+
 const pagina = {
-  data: [
-    {
-      id: 1,
-      type: 'credit' as const,
-      amount: 1000,
-      balance_after: 1000,
-      created_at: '2026-06-15T15:30:00+00:00',
-    },
-  ],
+  data: [transacao],
   meta: { current_page: 1, last_page: 1, per_page: 5, total: 1 },
 }
 
@@ -51,6 +51,28 @@ describe('store da carteira', () => {
     expect(wallet.erro).not.toBeNull()
     expect(wallet.resumo).toBeNull()
     expect(wallet.carregando).toBe(false)
+  })
+
+  it('deposita e recarrega o painel com o novo saldo', async () => {
+    vi.mocked(api.depositar).mockResolvedValue(transacao)
+    vi.mocked(api.buscarResumo).mockResolvedValue(resumo)
+    vi.mocked(api.listarTransacoes).mockResolvedValue(pagina)
+    const wallet = useWalletStore()
+
+    await wallet.depositar(10.5)
+
+    expect(api.depositar).toHaveBeenCalledWith(10.5)
+    expect(wallet.resumo).toEqual(resumo)
+    expect(wallet.recentes).toEqual(pagina.data)
+  })
+
+  it('não recarrega o painel quando o depósito falha', async () => {
+    vi.mocked(api.depositar).mockRejectedValue(new Error('falhou'))
+    const wallet = useWalletStore()
+
+    await expect(wallet.depositar(10)).rejects.toThrow('falhou')
+
+    expect(api.buscarResumo).not.toHaveBeenCalled()
   })
 
   it('limpa os dados ao sair', async () => {

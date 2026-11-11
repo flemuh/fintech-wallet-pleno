@@ -20,10 +20,3 @@ export function lerValorEmReais(texto: string): number | null {
 
   return Number.isSafeInteger(centavos) ? centavos : null
 }
-
-export function centavosParaValorDaApi(centavos: number): string {
-  const reais = Math.floor(centavos / 100)
-  const resto = String(centavos % 100).padStart(2, '0')
-
-  return `${reais}.${resto}`
-}

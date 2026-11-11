@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { buscarResumo, listarTransacoes } from '@/api/wallet'
+import { buscarResumo, depositar as depositarNaApi, listarTransacoes } from '@/api/wallet'
 import type { ResumoDaCarteira, Transacao } from '@/api/wallet'
 import { lerErroDaApi } from '@/api/http'
 
@@ -31,6 +31,12 @@ export const useWalletStore = defineStore('wallet', () => {
     }
   }
 
+  // Se o depósito falhar, o erro sobe para o formulário; se der certo, o painel já mostra o novo saldo
+  async function depositar(valorEmReais: number): Promise<void> {
+    await depositarNaApi(valorEmReais)
+    await carregarPainel()
+  }
+
   // Chamado ao sair: o próximo usuário não pode ver os dados do anterior
   function limpar(): void {
     resumo.value = null
@@ -38,5 +44,5 @@ export const useWalletStore = defineStore('wallet', () => {
     erro.value = null
   }
 
-  return { resumo, recentes, carregando, erro, carregarPainel, limpar }
+  return { resumo, recentes, carregando, erro, carregarPainel, depositar, limpar }
 })
