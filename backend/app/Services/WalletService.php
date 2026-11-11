@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Database\DetectsConcurrencyErrors;
 use Illuminate\Database\QueryException;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -25,6 +27,26 @@ class WalletService
     public function sacar(User $usuario, int $valorEmCentavos): Transaction
     {
         return $this->aplicar($usuario, TransactionType::Debit, $valorEmCentavos);
+    }
+
+    /**
+     * Lista as movimentações da carteira do usuário, da mais recente para a mais antiga.
+     * Filtros aceitos: type, from, to (datas inclusivas) e per_page.
+     *
+     * @param  array<string, mixed>  $filtros
+     * @return LengthAwarePaginator<int, Transaction>
+     */
+    public function historico(User $usuario, array $filtros = []): LengthAwarePaginator
+    {
+        $carteira = Wallet::where('user_id', $usuario->id)->firstOrFail();
+
+        return $carteira->transactions()
+            ->when($filtros['type'] ?? null, fn ($consulta, $tipo) => $consulta->where('type', $tipo))
+            ->when($filtros['from'] ?? null, fn ($consulta, $de) => $consulta->where('created_at', '>=', Carbon::parse($de)->startOfDay()))
+            ->when($filtros['to'] ?? null, fn ($consulta, $ate) => $consulta->where('created_at', '<=', Carbon::parse($ate)->endOfDay()))
+            ->latest()
+            ->latest('id') // desempate estável quando duas movimentações têm o mesmo instante
+            ->paginate((int) ($filtros['per_page'] ?? 15));
     }
 
     /** Atualiza o saldo e grava a movimentação na mesma transação do banco. */
