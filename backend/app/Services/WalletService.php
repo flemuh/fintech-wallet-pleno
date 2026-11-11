@@ -49,6 +49,30 @@ class WalletService
             ->paginate((int) ($filtros['per_page'] ?? 15));
     }
 
+    /**
+     * Saldo atual e totais da carteira, em centavos, calculados numa única consulta.
+     *
+     * @return array{balance: int, total_credit: int, total_debit: int, transactions_count: int}
+     */
+    public function resumo(User $usuario): array
+    {
+        $carteira = Wallet::where('user_id', $usuario->id)->firstOrFail();
+
+        $totais = DB::table('transactions')
+            ->where('wallet_id', $carteira->id)
+            ->selectRaw('count(*) as quantidade')
+            ->selectRaw("coalesce(sum(amount) filter (where type = 'credit'), 0) as total_credito")
+            ->selectRaw("coalesce(sum(amount) filter (where type = 'debit'), 0) as total_debito")
+            ->first();
+
+        return [
+            'balance' => $carteira->balance,
+            'total_credit' => (int) ($totais->total_credito ?? 0),
+            'total_debit' => (int) ($totais->total_debito ?? 0),
+            'transactions_count' => (int) ($totais->quantidade ?? 0),
+        ];
+    }
+
     /** Atualiza o saldo e grava a movimentação na mesma transação do banco. */
     private function aplicar(User $usuario, TransactionType $tipo, int $valorEmCentavos): Transaction
     {
