@@ -37,7 +37,7 @@ onMounted(() => wallet.carregarPainel())
         <div class="rounded-lg border border-slate-200 bg-white p-4">
           <dt class="flex items-center gap-2 text-sm text-slate-500">
             <ArrowDownToLine class="size-4 text-emerald-500" aria-hidden="true" />
-            Entradas no mês
+            Depositado no mês
           </dt>
           <dd class="mt-1 text-2xl font-semibold text-emerald-600">
             {{ formatarCentavos(resumo.month_credit) }}
@@ -46,7 +46,7 @@ onMounted(() => wallet.carregarPainel())
         <div class="rounded-lg border border-slate-200 bg-white p-4">
           <dt class="flex items-center gap-2 text-sm text-slate-500">
             <ArrowUpFromLine class="size-4 text-red-500" aria-hidden="true" />
-            Saídas no mês
+            Sacado no mês
           </dt>
           <dd class="mt-1 text-2xl font-semibold text-red-600">
             {{ formatarCentavos(resumo.month_debit) }}

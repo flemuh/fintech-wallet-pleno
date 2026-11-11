@@ -96,8 +96,8 @@ function mudarPagina(numero: number): void {
           class="mt-1 block w-full rounded border border-slate-300 px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         >
           <option value="">Todos</option>
-          <option value="credit">Depósitos</option>
-          <option value="debit">Saques</option>
+          <option value="credit">Depósitos (crédito)</option>
+          <option value="debit">Saques (débito)</option>
         </select>
         <p v-if="errosDosCampos.type" class="mt-1 text-sm text-red-600">
           {{ errosDosCampos.type[0] }}

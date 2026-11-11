@@ -8,7 +8,7 @@ defineProps<{
 }>()
 
 function rotuloDoTipo(transacao: Transacao): string {
-  return transacao.type === 'credit' ? 'Depósito' : 'Saque'
+  return transacao.type === 'credit' ? 'Depósito (crédito)' : 'Saque (débito)'
 }
 
 function valorComSinal(transacao: Transacao): string {
