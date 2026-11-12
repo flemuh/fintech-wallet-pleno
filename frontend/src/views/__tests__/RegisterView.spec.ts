@@ -153,8 +153,8 @@ describe('tela de cadastro', () => {
   it('limita nome, e-mail e senha como o backend', async () => {
     const { tela } = await montarTela()
 
-    expect(tela.find('#name').attributes('maxlength')).toBe('255')
-    expect(tela.find('#email').attributes('maxlength')).toBe('255')
+    expect(tela.find('#name').attributes('maxlength')).toBe('100')
+    expect(tela.find('#email').attributes('maxlength')).toBe('100')
     expect(tela.find('#password').attributes('maxlength')).toBe('64')
   })
 })

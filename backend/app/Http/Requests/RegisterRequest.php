@@ -18,8 +18,8 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email:rfc,filter', 'max:255', 'unique:users,email'],
+            'name' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'string', 'email:rfc,filter', 'max:100', 'unique:users,email'],
             // Até 64 caracteres, como pedem o NIST e a OWASP, sem passar dos 72 bytes do bcrypt
             'password' => [
                 'required',

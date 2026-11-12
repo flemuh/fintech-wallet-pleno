@@ -20,7 +20,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email:rfc,filter', 'max:255'],
+            'email' => ['required', 'string', 'email:rfc,filter', 'max:100'],
             // O máximo só evita processar textos enormes
             'password' => ['required', 'string', 'max:255'],
         ];
