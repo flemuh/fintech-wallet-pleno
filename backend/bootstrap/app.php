@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -61,4 +62,18 @@ return Application::configure(basePath: dirname(__DIR__))
                 'errors' => $e->errors(),
             ], $e->status)
             : null);
+
+        // Qualquer outro erro sai no mesmo formato, sem detalhe interno. Com APP_DEBUG ligado,
+        // o Laravel mostra o erro completo, o que ajuda no desenvolvimento
+        $exceptions->render(function (Throwable $e, Request $request) use ($ehApi, $erro): ?JsonResponse {
+            if (! $ehApi($request) || config('app.debug')) {
+                return null;
+            }
+
+            if ($e instanceof HttpExceptionInterface && $e->getStatusCode() < 500) {
+                return $erro('Não foi possível concluir a requisição.', 'request_error', $e->getStatusCode());
+            }
+
+            return $erro('Erro interno. Tente novamente em instantes.', 'server_error', 500);
+        });
     })->create();
