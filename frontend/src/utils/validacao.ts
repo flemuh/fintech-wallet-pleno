@@ -30,5 +30,12 @@ export function senhaForte(senha: string): boolean {
 
 // Conferência rápida antes de enviar; quem decide de verdade é o backend
 export function emailValido(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+  const texto = email.trim()
+
+  return texto.length <= 255 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(texto)
+}
+
+// Mesmo limite do LoginRequest no backend (min:8, max:255)
+export function senhaDeLoginValida(senha: string): boolean {
+  return senha.length >= 8 && senha.length <= 255
 }
