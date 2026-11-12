@@ -37,13 +37,13 @@ export const useWalletStore = defineStore('wallet', () => {
   }
 
   // Se a operação falhar, o erro sobe para o formulário; se der certo, o painel já mostra o novo saldo
-  async function depositar(valorEmReais: number): Promise<void> {
-    await depositarNaApi(valorEmReais)
+  async function depositar(valorEmReais: number, chave: string): Promise<void> {
+    await depositarNaApi(valorEmReais, chave)
     await carregarPainel()
   }
 
-  async function sacar(valorEmReais: number): Promise<void> {
-    await sacarNaApi(valorEmReais)
+  async function sacar(valorEmReais: number, chave: string): Promise<void> {
+    await sacarNaApi(valorEmReais, chave)
     await carregarPainel()
   }
 

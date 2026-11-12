@@ -48,18 +48,24 @@ export async function listarTransacoes(
   return data
 }
 
-/** O valor enviado é em reais (ex.: 10.5); a API converte para centavos. */
-export async function depositar(valorEmReais: number): Promise<Transacao> {
-  const { data } = await http.post<{ data: Transacao }>('/wallet/deposits', {
-    amount: valorEmReais,
-  })
-  return data.data
+/**
+ * O valor vai em reais (ex.: 10.5); a API converte para centavos. A chave identifica a operação:
+ * reenviada com a mesma chave, a API devolve a operação já feita em vez de repeti-la.
+ */
+export async function depositar(valorEmReais: number, chave: string): Promise<Transacao> {
+  return operar('/wallet/deposits', valorEmReais, chave)
 }
 
-/** O valor enviado é em reais (ex.: 10.5); a API converte para centavos. */
-export async function sacar(valorEmReais: number): Promise<Transacao> {
-  const { data } = await http.post<{ data: Transacao }>('/wallet/withdrawals', {
-    amount: valorEmReais,
-  })
+/** Mesmas regras do depósito. */
+export async function sacar(valorEmReais: number, chave: string): Promise<Transacao> {
+  return operar('/wallet/withdrawals', valorEmReais, chave)
+}
+
+async function operar(rota: string, valorEmReais: number, chave: string): Promise<Transacao> {
+  const { data } = await http.post<{ data: Transacao }>(
+    rota,
+    { amount: valorEmReais },
+    { headers: { 'Idempotency-Key': chave } },
+  )
   return data.data
 }

@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import OperationForm from '@/components/wallet/OperationForm.vue'
 import { useToast } from '@/composables/useToast'
 
-type Executar = (valorEmReais: number) => Promise<unknown>
+type Executar = (valorEmReais: number, chave: string) => Promise<unknown>
 
 function montarFormulario(executar: Executar, saldoDisponivel?: number) {
   return mount(OperationForm, {
@@ -36,7 +36,7 @@ describe('OperationForm', () => {
     await enviarValor(wrapper, '10,50')
     await flushPromises()
 
-    expect(executar).toHaveBeenCalledWith(10.5)
+    expect(executar).toHaveBeenCalledWith(10.5, expect.any(String))
     expect(useToast().toasts.value.map((toast) => [toast.tipo, toast.mensagem])).toEqual([
       ['sucesso', 'Operação realizada com sucesso.'],
     ])
@@ -102,6 +102,41 @@ describe('OperationForm', () => {
     await flushPromises()
 
     expect(wrapper.text()).not.toContain('Saldo insuficiente')
-    expect(executar).toHaveBeenCalledWith(10)
+    expect(executar).toHaveBeenCalledWith(10, expect.any(String))
+  })
+
+  it('reenvio do mesmo valor depois de uma falha usa a mesma chave', async () => {
+    const executar = vi
+      .fn<Executar>()
+      .mockRejectedValueOnce(new Error('rede'))
+      .mockResolvedValue(undefined)
+    const wrapper = montarFormulario(executar)
+
+    await enviarValor(wrapper, '10,00')
+    await flushPromises()
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const [primeira, segunda] = executar.mock.calls.map(([, chave]) => chave)
+    expect(primeira).toEqual(expect.any(String))
+    expect(segunda).toBe(primeira)
+  })
+
+  it('operação concluída ou valor diferente usam uma chave nova', async () => {
+    const executar = vi
+      .fn<Executar>()
+      .mockRejectedValueOnce(new Error('rede'))
+      .mockResolvedValue(undefined)
+    const wrapper = montarFormulario(executar)
+
+    await enviarValor(wrapper, '10,00')
+    await flushPromises()
+    await enviarValor(wrapper, '20,00')
+    await flushPromises()
+    await enviarValor(wrapper, '20,00')
+    await flushPromises()
+
+    const chaves = executar.mock.calls.map(([, chave]) => chave)
+    expect(new Set(chaves).size).toBe(3)
   })
 })

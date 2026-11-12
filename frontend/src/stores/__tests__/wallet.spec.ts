@@ -59,9 +59,9 @@ describe('store da carteira', () => {
     vi.mocked(api.listarTransacoes).mockResolvedValue(pagina)
     const wallet = useWalletStore()
 
-    await wallet.depositar(10.5)
+    await wallet.depositar(10.5, 'chave-1')
 
-    expect(api.depositar).toHaveBeenCalledWith(10.5)
+    expect(api.depositar).toHaveBeenCalledWith(10.5, 'chave-1')
     expect(wallet.resumo).toEqual(resumo)
     expect(wallet.recentes).toEqual(pagina.data)
   })
@@ -70,7 +70,7 @@ describe('store da carteira', () => {
     vi.mocked(api.depositar).mockRejectedValue(new Error('falhou'))
     const wallet = useWalletStore()
 
-    await expect(wallet.depositar(10)).rejects.toThrow('falhou')
+    await expect(wallet.depositar(10, 'chave-1')).rejects.toThrow('falhou')
 
     expect(api.buscarResumo).not.toHaveBeenCalled()
   })
@@ -81,9 +81,9 @@ describe('store da carteira', () => {
     vi.mocked(api.listarTransacoes).mockResolvedValue(pagina)
     const wallet = useWalletStore()
 
-    await wallet.sacar(5.25)
+    await wallet.sacar(5.25, 'chave-2')
 
-    expect(api.sacar).toHaveBeenCalledWith(5.25)
+    expect(api.sacar).toHaveBeenCalledWith(5.25, 'chave-2')
     expect(wallet.resumo).toEqual(resumo)
   })
 
