@@ -45,8 +45,8 @@ class WalletService
 
         return $carteira->transactions()
             ->when($filtros['type'] ?? null, fn ($consulta, $tipo) => $consulta->where('type', $tipo))
-            ->when($filtros['from'] ?? null, fn ($consulta, $de) => $consulta->where('created_at', '>=', Carbon::parse($de)->startOfDay()))
-            ->when($filtros['to'] ?? null, fn ($consulta, $ate) => $consulta->where('created_at', '<=', Carbon::parse($ate)->endOfDay()))
+            ->when($filtros['from'] ?? null, fn ($consulta, $de) => $consulta->where('created_at', '>=', Carbon::parse($de, self::FUSO_DO_NEGOCIO)->startOfDay()->utc()))
+            ->when($filtros['to'] ?? null, fn ($consulta, $ate) => $consulta->where('created_at', '<=', Carbon::parse($ate, self::FUSO_DO_NEGOCIO)->endOfDay()->utc()))
             ->latest()
             ->latest('id') // desempate estável quando duas movimentações têm o mesmo instante
             ->paginate((int) ($filtros['per_page'] ?? 15));
