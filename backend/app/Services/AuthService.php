@@ -5,11 +5,18 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthService
 {
+    /** O bcrypt só considera os primeiros 72 bytes da senha; acima disso o resto seria ignorado. */
+    public const LIMITE_DE_BYTES_DA_SENHA = 72;
+
+    /** Hash usado quando o e-mail não existe, para o login levar o mesmo tempo nos dois casos. */
+    private static ?string $hashDeComparacao = null;
+
     /**
      * Cria o usuário e a carteira com saldo zero na mesma transação
      * e devolve o usuário junto com um token de acesso.
@@ -39,7 +46,12 @@ class AuthService
     {
         $usuario = User::where('email', $email)->first();
 
-        if (! $usuario || ! Hash::check($senha, $usuario->password)) {
+        // Sempre confere um hash: sem isso, a resposta mais rápida revelaria que o e-mail não existe
+        self::$hashDeComparacao ??= Hash::make(Str::random(40));
+        $hash = $usuario->password ?? self::$hashDeComparacao;
+        $senhaConfere = strlen($senha) <= self::LIMITE_DE_BYTES_DA_SENHA && Hash::check($senha, $hash);
+
+        if (! $usuario || ! $senhaConfere) {
             throw ValidationException::withMessages([
                 'email' => ['Credenciais inválidas.'],
             ]);

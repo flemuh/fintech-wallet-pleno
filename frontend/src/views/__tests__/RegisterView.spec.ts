@@ -107,4 +107,54 @@ describe('tela de cadastro', () => {
     expect(tela.text()).toContain('Informe um e-mail válido')
     expect(tela.text()).toContain('A senha ainda não cumpre todos os requisitos')
   })
+
+  it('o erro some e o campo fica verde assim que é corrigido', async () => {
+    const { tela } = await montarTela()
+
+    await tela.find('#email').setValue('ana@')
+    await tela.find('form').trigger('submit')
+    expect(tela.text()).toContain('Informe um e-mail válido')
+
+    await tela.find('#email').setValue('ana@exemplo.com')
+
+    expect(tela.text()).not.toContain('Informe um e-mail válido')
+    expect(tela.find('#email').classes()).toContain('border-emerald-500')
+  })
+
+  it('só acusa o erro depois que a pessoa sai do campo preenchido', async () => {
+    const { tela } = await montarTela()
+
+    await tela.find('#email').setValue('ana@')
+    expect(tela.text()).not.toContain('Informe um e-mail válido')
+
+    await tela.find('#email').trigger('blur')
+    expect(tela.text()).toContain('Informe um e-mail válido')
+  })
+
+  it('o erro da API some quando o próprio campo é editado', async () => {
+    vi.mocked(api.registrar).mockRejectedValue(
+      erroDaApi(422, {
+        message: 'O e-mail já está em uso.',
+        code: 'validation_failed',
+        errors: { email: ['O e-mail já está em uso.'] },
+      }),
+    )
+    const { tela } = await montarTela()
+
+    await preencherEEnviar(tela)
+    await flushPromises()
+    expect(tela.text()).toContain('O e-mail já está em uso.')
+
+    await tela.find('#email').setValue('outra@exemplo.com')
+
+    expect(tela.text()).not.toContain('O e-mail já está em uso.')
+  })
+
+  it('limita nome, e-mail e senha como o backend', async () => {
+    const { tela } = await montarTela()
+
+    expect(tela.find('#name').attributes('maxlength')).toBe('255')
+    expect(tela.find('#email').attributes('maxlength')).toBe('255')
+    expect(tela.find('#password').attributes('maxlength')).toBe('64')
+  })
 })

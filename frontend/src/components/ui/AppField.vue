@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Check } from '@lucide/vue'
+
 const props = defineProps<{
   id: string
   label: string
@@ -6,7 +8,10 @@ const props = defineProps<{
   autocomplete?: string
   dica?: string
   erro?: string
+  // Campo conferido e correto: borda verde e ícone de confirmação
+  valido?: boolean
   placeholder?: string
+  maxlength?: number
   // Teclado do celular (ex.: "numeric" abre só números)
   inputmode?: 'text' | 'numeric' | 'decimal' | 'email'
   // Texto fixo dentro do campo, à esquerda (ex.: "R$")
@@ -14,6 +19,8 @@ const props = defineProps<{
   // Transforma o texto a cada digitação (ex.: máscara de valor em reais)
   mascara?: (texto: string) => string
 }>()
+
+const emit = defineEmits<{ sair: [] }>()
 
 const valor = defineModel<string>({ required: true })
 
@@ -44,15 +51,22 @@ function aoDigitar(evento: Event): void {
         :type="type ?? 'text'"
         :autocomplete="autocomplete"
         :placeholder="placeholder"
+        :maxlength="maxlength"
         :inputmode="inputmode"
         :aria-invalid="erro ? 'true' : undefined"
         class="campo"
         :class="[
-          erro ? 'border-red-500' : '',
+          erro ? 'border-red-500' : valido ? 'border-emerald-500' : '',
           prefixo ? 'h-11 pl-10 text-lg' : '',
-          $slots.sufixo ? 'pr-10' : '',
+          $slots.sufixo || valido ? 'pr-10' : '',
         ]"
         @input="aoDigitar"
+        @blur="emit('sair')"
+      />
+      <Check
+        v-if="valido && !erro && !$slots.sufixo"
+        class="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-emerald-600"
+        aria-hidden="true"
       />
       <!-- Conteúdo extra à direita do campo (ex.: botão do calendário) -->
       <slot name="sufixo" />

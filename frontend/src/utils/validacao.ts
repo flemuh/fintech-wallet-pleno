@@ -28,14 +28,17 @@ export function senhaForte(senha: string): boolean {
   return avaliarSenha(senha).every((criterio) => criterio.atendido)
 }
 
+// Mesmos limites dos Form Requests do backend
+export const LIMITES = { nome: 255, email: 255, senha: 64, bytesDaSenha: 72 } as const
+
+// O bcrypt só considera 72 bytes, e acentos e outros caracteres fora do ASCII ocupam mais de um byte
+export function senhaCabeNoLimite(senha: string): boolean {
+  return new TextEncoder().encode(senha).length <= LIMITES.bytesDaSenha
+}
+
 // Conferência rápida antes de enviar; quem decide de verdade é o backend
 export function emailValido(email: string): boolean {
   const texto = email.trim()
 
-  return texto.length <= 255 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(texto)
-}
-
-// Mesmo limite do LoginRequest no backend (min:8, max:255)
-export function senhaDeLoginValida(senha: string): boolean {
-  return senha.length >= 8 && senha.length <= 255
+  return texto.length <= LIMITES.email && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(texto)
 }

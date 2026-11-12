@@ -10,7 +10,7 @@ Carteira digital pessoal com depósitos, saques e histórico de transações. AP
 | **Repositório** | https://github.com/flemuh/fintech-wallet-pleno |
 | **Usuário de teste** | `demo@wallet.speedlora.app` / `Demo@12345` |
 
-O usuário de teste já tem saldo e movimentações dos últimos 30 dias. Para criar outra conta, use o link **Criar conta** na tela de login: nome, e-mail válido e senha com no mínimo 8 caracteres, letra maiúscula, letra minúscula, número e símbolo. A tela mostra a força da senha enquanto você digita, e a carteira nova começa com R$ 0,00.
+O usuário de teste já tem saldo e movimentações dos últimos 30 dias. Para criar outra conta, use o link **Criar conta** na tela de login: nome, e-mail válido e senha de 8 a 64 caracteres, com letra maiúscula, letra minúscula, número e símbolo. A tela mostra a força da senha enquanto você digita, e a carteira nova começa com R$ 0,00.
 
 ## Sumário
 
@@ -123,7 +123,7 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 
 - **Acesso só à própria carteira:** a API nunca recebe `wallet_id` nem `user_id`; usa sempre o dono do token.
 - **Token:** expira em 24 horas (`SANCTUM_EXPIRATION`), tem o prefixo `fwallet_`, que torna um token vazado fácil de achar numa varredura de segredos (por exemplo, um padrão personalizado no secret scanning do GitHub), e é revogado no logout.
-- **Senha e e-mail:** no cadastro, e-mail validado (`email:rfc,filter`) e senha com 8+ caracteres, maiúscula, minúscula, número e símbolo. O login confere o formato do e-mail e o tamanho da senha (8 a 255 caracteres), mas não exige maiúscula, número ou símbolo, para não revelar a política nem bloquear contas antigas.
+- **Senha e e-mail:** no cadastro, e-mail validado (`email:rfc,filter`) e senha de 8 a 64 caracteres, com maiúscula, minúscula, número e símbolo. A senha também não pode passar de 72 bytes, o limite do bcrypt, que ignoraria o resto sem avisar (acentos ocupam 2 bytes cada). O login só confere o formato do e-mail e se a senha foi preenchida: qualquer senha errada recebe o mesmo "Credenciais inválidas.", e a resposta leva o mesmo tempo exista o e-mail ou não, para não revelar quais contas estão cadastradas.
 - **Limites de requisição:** registro 5 por minuto por IP; login 5 por minuto por IP e e-mail; depósito e saque 20 por minuto por usuário; demais rotas 60 por minuto. Na VPS, o Nginx ainda limita 10 requisições por segundo por IP.
 - **IP real:** o Laravel confia só nos proxies internos (faixas privadas do Docker), então um `X-Forwarded-For` forjado não escapa dos limites. Há um teste que reproduz esse ataque.
 - **CSRF:** não se aplica, porque o token vai no cabeçalho `Authorization`, que o navegador nunca envia sozinho. O modo de cookie do Sanctum está desligado.
@@ -137,8 +137,8 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 
 | Suíte | Quantidade | O que cobre |
 |---|---|---|
-| PHPUnit (backend) | 99 | Depósito, saque, saldo insuficiente, idempotência, valores inválidos e de arredondamento, histórico e filtros no dia de São Paulo, resumo do mês no mesmo fuso, erro inesperado sem detalhe interno, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
-| Vitest (frontend) | 136 | Cliente HTTP e sessão expirada, chave de idempotência, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários, painel, extrato, datas do filtro, toasts e medidor de senha |
+| PHPUnit (backend) | 104 | Depósito, saque, saldo insuficiente, idempotência, valores inválidos e de arredondamento, histórico e filtros no dia de São Paulo, resumo do mês no mesmo fuso, erro inesperado sem detalhe interno, registro e login, senha fraca, limite de 64 caracteres e 72 bytes, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
+| Vitest (frontend) | 146 | Cliente HTTP e sessão expirada, chave de idempotência, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários com validação ao vivo e limites, painel, extrato, datas do filtro, toasts e medidor de senha |
 
 A maior parte dos testes de backend é de cenários de falha. O CI também cobra o padrão de código: Pint (PSR-12) e Larastan (nível 6) no backend; Prettier (100 colunas), oxlint, ESLint e checagem de tipos com `vue-tsc` no frontend.
 
