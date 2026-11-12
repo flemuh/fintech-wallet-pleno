@@ -56,7 +56,7 @@ fintech-wallet-pleno/
 
 **Saldo após a operação gravado.** Cada transação guarda `balance_after` no momento em que é criada. O histórico não recalcula saldo, e as transações são imutáveis (sem rota de edição ou exclusão).
 
-**Datas no fuso de São Paulo.** O mês atual do painel e os dias do filtro do extrato são calculados em `America/Sao_Paulo` e convertidos para UTC na consulta; há testes para a virada do mês e para uma transação às 22h53, que em UTC já cai no dia seguinte. Na tela, os filtros de data usam dd/mm/aaaa em qualquer navegador, com um botão que abre o calendário do próprio navegador.
+**Fuso do produto: horário de Brasília.** A API devolve datas em UTC no formato ISO 8601, o padrão de APIs públicas como as do GitHub e do Stripe, porque um instante em UTC não tem ambiguidade. As regras que dependem do dia, como o mês atual do painel e o período do filtro do extrato, seguem o horário de Brasília (`America/Sao_Paulo`), o fuso de referência do produto, como nos bancos brasileiros. A conversão acontece na consulta, e há testes para a virada do mês e para uma transação às 22h53, que em UTC já cai no dia seguinte. Na tela, os filtros de data usam dd/mm/aaaa em qualquer navegador, com um botão que abre o calendário do próprio navegador.
 
 **PostgreSQL também nos testes.** O CI roda a suíte em PostgreSQL 16, o mesmo banco da produção, porque `lockForUpdate` e `CHECK` não se comportam igual no SQLite.
 
@@ -227,8 +227,8 @@ O trabalho é feito na branch `dev`, com commits no padrão Conventional Commits
 
 ## Limitações conhecidas e próximos passos
 
-- **Alguns segundos de indisponibilidade a cada deploy**, enquanto o container novo do backend sobe e roda as migrations. O próximo passo seria um deploy com troca sem parada.
+- **Alguns segundos fora do ar a cada deploy.** O script reconstrói o container do backend, que roda as migrations antes de voltar a responder. Hoje o risco é baixo: só o dono do projeto faz deploy, e a aprovação manual escolhe o momento. Para eliminar a parada, o caminho comum é o deploy blue-green ou rolling: o container novo sobe ao lado do antigo, passa no health check (`/api/health`) e só então o Nginx troca o tráfego. As migrations precisam funcionar com as duas versões ao mesmo tempo (primeiro adicionar, depois remover). Ferramentas como o Kamal e o docker-rollout fazem essa troca com Docker.
 - **Sem chave de idempotência.** O botão fica desabilitado durante o envio, o que evita o duplo clique, mas uma repetição da mesma requisição pela rede, feita direto na API, cria uma segunda operação. O próximo passo seria um cabeçalho `Idempotency-Key` gravado na mesma transação.
-- **Senhas vazadas não são checadas** (`Password::uncompromised()`), porque isso depende de um serviço externo a cada cadastro.
+- **Senhas conhecidas de vazamentos não são recusadas.** O cadastro exige senha forte, mas aceita uma senha que cumpre as regras e já apareceu em vazamentos. O risco é o ataque com listas de senhas vazadas, que o limite de 5 tentativas de login por minuto já reduz. A correção é uma regra no `RegisterRequest`, `Password::uncompromised()`, que consulta o Have I Been Pwned por k-anonymity: só os 5 primeiros caracteres do hash SHA-1 da senha saem do servidor. Ficou de fora do MVP porque faz uma chamada externa a cada cadastro. Com ela, os testes usariam `Http::fake()`, e o cadastro continua liberado se o serviço cair.
 - **Alertas moderados nas ferramentas de desenvolvimento** (`minimatch`, dentro do ESLint e do `@vue/test-utils`). Não entram na imagem de produção, e a correção exige trocar versões major; ficam para depois da entrega.
-- **Datas da API em UTC.** A interface converte para o horário de Brasília; outros clientes precisam fazer o mesmo.
+- **Um fuso para todos.** Quem usa o app fora do Brasil vê as datas e os filtros no horário de Brasília. O próximo passo seria guardar o fuso de cada usuário, preenchido no cadastro a partir do navegador (`Intl.DateTimeFormat().resolvedOptions().timeZone`) e validado com `timezone:all`, e usá-lo nos cálculos e na exibição.
