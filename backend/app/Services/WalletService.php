@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Enums\TransactionType;
 use App\Exceptions\ConcurrentOperationException;
+use App\Exceptions\IdempotencyKeyReusedException;
 use App\Exceptions\InsufficientBalanceException;
+use App\Models\IdempotencyKey;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -22,14 +24,14 @@ class WalletService
     /** Fuso em que o usuário enxerga "o mês atual". */
     private const FUSO_DO_NEGOCIO = 'America/Sao_Paulo';
 
-    public function depositar(User $usuario, int $valorEmCentavos): Transaction
+    public function depositar(User $usuario, int $valorEmCentavos, ?string $chave = null): Transaction
     {
-        return $this->aplicar($usuario, TransactionType::Credit, $valorEmCentavos);
+        return $this->aplicar($usuario, TransactionType::Credit, $valorEmCentavos, $chave);
     }
 
-    public function sacar(User $usuario, int $valorEmCentavos): Transaction
+    public function sacar(User $usuario, int $valorEmCentavos, ?string $chave = null): Transaction
     {
-        return $this->aplicar($usuario, TransactionType::Debit, $valorEmCentavos);
+        return $this->aplicar($usuario, TransactionType::Debit, $valorEmCentavos, $chave);
     }
 
     /**
@@ -80,17 +82,27 @@ class WalletService
         ];
     }
 
-    /** Atualiza o saldo e grava a movimentação na mesma transação do banco. */
-    private function aplicar(User $usuario, TransactionType $tipo, int $valorEmCentavos): Transaction
+    /**
+     * Atualiza o saldo e grava a movimentação na mesma transação do banco.
+     * Com uma chave de idempotência já usada, devolve a movimentação daquela vez, sem repetir a operação.
+     */
+    private function aplicar(User $usuario, TransactionType $tipo, int $valorEmCentavos, ?string $chave): Transaction
     {
         if ($valorEmCentavos <= 0) {
             throw new InvalidArgumentException('O valor deve ser maior que zero.');
         }
 
         try {
-            return DB::transaction(function () use ($usuario, $tipo, $valorEmCentavos) {
+            return DB::transaction(function () use ($usuario, $tipo, $valorEmCentavos, $chave) {
                 // Trava a linha: duas operações simultâneas não leem o mesmo saldo
                 $carteira = $this->carteiraDo($usuario, travar: true);
+
+                // Com a carteira travada, duas requisições com a mesma chave passam por aqui uma de cada vez
+                $hashDaOperacao = hash('sha256', $tipo->value.'|'.$valorEmCentavos);
+                $repetida = $chave === null ? null : $this->operacaoJaFeita($usuario, $chave, $hashDaOperacao);
+                if ($repetida !== null) {
+                    return $repetida;
+                }
 
                 $novoSaldo = $tipo === TransactionType::Credit
                     ? $carteira->balance + $valorEmCentavos
@@ -103,11 +115,22 @@ class WalletService
 
                 $carteira->update(['balance' => $novoSaldo]);
 
-                return $carteira->transactions()->create([
+                $transacao = $carteira->transactions()->create([
                     'type' => $tipo,
                     'amount' => $valorEmCentavos,
                     'balance_after' => $novoSaldo,
                 ]);
+
+                if ($chave !== null) {
+                    IdempotencyKey::create([
+                        'user_id' => $usuario->id,
+                        'key' => $chave,
+                        'request_hash' => $hashDaOperacao,
+                        'transaction_id' => $transacao->id,
+                    ]);
+                }
+
+                return $transacao;
             }, 3); // até 3 tentativas se o banco abortar por deadlock
         } catch (QueryException $erro) {
             // Esgotadas as tentativas: responde 409 em vez de um 500 genérico
@@ -117,6 +140,22 @@ class WalletService
 
             throw $erro;
         }
+    }
+
+    /** Movimentação já gravada com esta chave, ou null. Chave igual com operação diferente é recusada. */
+    private function operacaoJaFeita(User $usuario, string $chave, string $hashDaOperacao): ?Transaction
+    {
+        $registro = IdempotencyKey::where('user_id', $usuario->id)->where('key', $chave)->first();
+
+        if ($registro === null) {
+            return null;
+        }
+
+        if ($registro->request_hash !== $hashDaOperacao) {
+            throw new IdempotencyKeyReusedException;
+        }
+
+        return $registro->transaction;
     }
 
     /** Carteira do usuário. Com $travar, a linha fica bloqueada até o fim da transação do banco. */

@@ -6,11 +6,11 @@ import type { LocationQuery, LocationQueryRaw, LocationQueryValue } from 'vue-ro
 import { listarTransacoes } from '@/api/wallet'
 import type { FiltrosDoHistorico, PaginaDeTransacoes } from '@/api/wallet'
 import AppAlert from '@/components/ui/AppAlert.vue'
-import AppField from '@/components/ui/AppField.vue'
+import AppDateField from '@/components/ui/AppDateField.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
 import TransactionTable from '@/components/wallet/TransactionTable.vue'
 import { useEnvio } from '@/composables/useEnvio'
-import { dataBrParaIso, dataIsoParaBr, mascararData } from '@/utils/date'
+import { dataBrParaIso, dataIsoParaBr } from '@/utils/date'
 
 const TRANSACOES_POR_PAGINA = 10
 
@@ -122,24 +122,16 @@ function mudarPagina(numero: number): void {
         </p>
       </div>
 
-      <AppField
+      <AppDateField
         id="filtro-inicio"
         v-model="formulario.from"
         label="Data inicial"
-        placeholder="dd/mm/aaaa"
-        inputmode="numeric"
-        autocomplete="off"
-        :mascara="mascararData"
         :erro="errosDasDatas.from ?? errosDosCampos.from?.[0]"
       />
-      <AppField
+      <AppDateField
         id="filtro-fim"
         v-model="formulario.to"
         label="Data final"
-        placeholder="dd/mm/aaaa"
-        inputmode="numeric"
-        autocomplete="off"
-        :mascara="mascararData"
         :erro="errosDasDatas.to ?? errosDosCampos.to?.[0]"
       />
 

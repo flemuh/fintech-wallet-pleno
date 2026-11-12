@@ -12,7 +12,8 @@ const props = defineProps<{
   titulo: string
   rotuloDoBotao: string
   mensagemDeSucesso: string
-  executar: (valorEmReais: number) => Promise<unknown>
+  // A chave de idempotência vai junto: a API nunca executa duas vezes a mesma tentativa
+  executar: (valorEmReais: number, chave: string) => Promise<unknown>
   // Ação principal usa o botão cheio; a secundária, o botão com contorno
   destaque?: 'primario' | 'secundario'
   // Componente de ícone exibido ao lado do título (opcional)
@@ -27,6 +28,18 @@ const valor = ref('')
 const erroLocal = ref<string | null>(null)
 const toast = useToast()
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
+
+// Uma chave por operação: se a resposta não chegar (rede caiu) e a pessoa reenviar o mesmo valor,
+// a chave se repete e a API devolve a operação já feita. Valor novo ou operação concluída: chave nova
+let tentativa: { centavos: number; chave: string } | null = null
+
+function chaveDaOperacao(centavos: number): string {
+  if (tentativa?.centavos !== centavos) {
+    tentativa = { centavos, chave: crypto.randomUUID() }
+  }
+
+  return tentativa.chave
+}
 
 const classeDoBotao = computed(() =>
   props.destaque === 'secundario' ? 'botao-secundario' : 'botao-primario',
@@ -61,8 +74,10 @@ async function enviarFormulario(): Promise<void> {
 
   if (excedeOSaldo.value) return
 
-  const deuCerto = await enviar(() => props.executar(centavos / 100))
+  const chave = chaveDaOperacao(centavos)
+  const deuCerto = await enviar(() => props.executar(centavos / 100, chave))
   if (deuCerto) {
+    tentativa = null
     valor.value = ''
     toast.sucesso(props.mensagemDeSucesso)
   } else if (erroGeral.value) {

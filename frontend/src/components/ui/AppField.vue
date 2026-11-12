@@ -47,9 +47,15 @@ function aoDigitar(evento: Event): void {
         :inputmode="inputmode"
         :aria-invalid="erro ? 'true' : undefined"
         class="campo"
-        :class="[erro ? 'border-red-500' : '', prefixo ? 'h-11 pl-10 text-lg' : '']"
+        :class="[
+          erro ? 'border-red-500' : '',
+          prefixo ? 'h-11 pl-10 text-lg' : '',
+          $slots.sufixo ? 'pr-10' : '',
+        ]"
         @input="aoDigitar"
       />
+      <!-- Conteúdo extra à direita do campo (ex.: botão do calendário) -->
+      <slot name="sufixo" />
     </div>
     <p v-if="erro" class="mt-1 text-sm text-red-600">{{ erro }}</p>
     <p v-else-if="dica" class="mt-1 text-sm text-slate-500">{{ dica }}</p>

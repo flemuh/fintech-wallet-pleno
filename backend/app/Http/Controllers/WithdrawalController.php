@@ -14,7 +14,7 @@ class WithdrawalController extends Controller
     {
         /** @var User $usuario */
         $usuario = $request->user();
-        $transacao = $servico->sacar($usuario, $request->valorEmCentavos());
+        $transacao = $servico->sacar($usuario, $request->valorEmCentavos(), $request->chaveDeIdempotencia());
 
         return TransactionResource::make($transacao)->response()->setStatusCode(201);
     }

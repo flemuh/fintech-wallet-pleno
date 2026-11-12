@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Transaction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,5 +20,13 @@ class TransactionResource extends JsonResource
             'balance_after' => $this->balance_after, // em centavos
             'created_at' => $this->created_at->toIso8601String(),
         ];
+    }
+
+    /** Repetição de uma operação já feita (mesma Idempotency-Key): avisa o cliente, como faz o Stripe. */
+    public function withResponse(Request $request, JsonResponse $response): void
+    {
+        if ($request->isMethod('POST') && ! $this->resource->wasRecentlyCreated) {
+            $response->header('Idempotent-Replayed', 'true');
+        }
     }
 }

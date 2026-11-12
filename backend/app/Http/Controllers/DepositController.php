@@ -14,7 +14,7 @@ class DepositController extends Controller
     {
         /** @var User $usuario */
         $usuario = $request->user();
-        $transacao = $servico->depositar($usuario, $request->valorEmCentavos());
+        $transacao = $servico->depositar($usuario, $request->valorEmCentavos(), $request->chaveDeIdempotencia());
 
         return TransactionResource::make($transacao)->response()->setStatusCode(201);
     }
