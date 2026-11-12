@@ -41,7 +41,7 @@ fintech-wallet-pleno/
 ├── deploy/deploy.sh      script de deploy na VPS
 ├── compose.yaml          ambiente de desenvolvimento
 ├── compose.prod.yaml     ambiente de produção
-└── .github/workflows/    CI e deploy
+└── .github/             CI, deploy e Dependabot
 ```
 
 ## Decisões técnicas
@@ -66,7 +66,7 @@ fintech-wallet-pleno/
 
 **Mesma origem em produção.** O Nginx serve o Vue em `/` e repassa só `/api` ao Laravel. No desenvolvimento, o proxy do Vite faz o mesmo, então o navegador nunca depende de CORS. O CORS restrito existe só como defesa extra.
 
-**Interface sem biblioteca de componentes.** Tailwind CSS 4 e ícones do Lucide. Os componentes (campo, alerta, paginação, toast, medidor de senha, formulário de operação e tabela) são do próprio projeto. Depósito e saque usam o mesmo `OperationForm`, sem código duplicado. O campo de valor tem máscara de real (digitar `1050` vira `10,50`).
+**Interface sem biblioteca de componentes.** Tailwind CSS 4 e ícones do Lucide. Os componentes (campo, campo de data com calendário, alerta, paginação, toast, medidor de senha, formulário de operação e tabela, que vira cartões no celular) são do próprio projeto. Depósito e saque usam o mesmo `OperationForm`, sem código duplicado. O campo de valor tem máscara de real (digitar `1050` vira `10,50`).
 
 **Docker no desenvolvimento e na produção.** A mesma imagem do PHP serve os dois ambientes, com estágios diferentes.
 
@@ -90,6 +90,7 @@ Limite por operação: R$ 999.999,99 (`max:999999.99`).
 |---|---|
 | Saldo de R$ 100 e 10 saques simultâneos de R$ 50 | 2 respostas 201 e 8 respostas 422; saldo final 0 e só 2 saques gravados |
 | 20 depósitos simultâneos de R$ 10 (desenvolvimento) | 20 respostas 201; saldo igual à soma das movimentações |
+| 10 depósitos simultâneos com a mesma `Idempotency-Key` (desenvolvimento) | 10 respostas 201 com a mesma transação; o saldo sobe uma vez só |
 
 ## API
 
@@ -101,8 +102,8 @@ Base: `/api`. Rotas da carteira exigem `Authorization: Bearer <token>`. Depósit
 | POST | `/auth/login` | 200 com usuário e token | 422, 429 |
 | POST | `/auth/logout` | 204 | 401 |
 | GET | `/wallet` | 200 com `balance`, `month_credit` e `month_debit` | 401, 429 |
-| POST | `/wallet/deposits` | 201 com a transação | 401, 422, 429 |
-| POST | `/wallet/withdrawals` | 201 com a transação | 401, 422, 429 |
+| POST | `/wallet/deposits` | 201 com a transação | 401, 409, 422, 429 |
+| POST | `/wallet/withdrawals` | 201 com a transação | 401, 409, 422, 429 |
 | GET | `/wallet/transactions` | 200 paginado; filtros `type`, `from`, `to`, `per_page` (até 50) e `page` | 401, 422, 429 |
 | GET | `/health` | 200 `{"status":"ok"}` | |
 
@@ -121,7 +122,7 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 ## Segurança
 
 - **Acesso só à própria carteira:** a API nunca recebe `wallet_id` nem `user_id`; usa sempre o dono do token.
-- **Token:** expira em 24 horas (`SANCTUM_EXPIRATION`), tem o prefixo `fwallet_` para a varredura de segredos do GitHub reconhecer um vazamento e é revogado no logout.
+- **Token:** expira em 24 horas (`SANCTUM_EXPIRATION`), tem o prefixo `fwallet_`, que torna um token vazado fácil de achar numa varredura de segredos (por exemplo, um padrão personalizado no secret scanning do GitHub), e é revogado no logout.
 - **Senha e e-mail:** no cadastro, e-mail validado (`email:rfc,filter`) e senha com 8+ caracteres, maiúscula, minúscula, número e símbolo. O login confere o formato do e-mail e o tamanho da senha (8 a 255 caracteres), mas não exige maiúscula, número ou símbolo, para não revelar a política nem bloquear contas antigas.
 - **Limites de requisição:** registro 5 por minuto por IP; login 5 por minuto por IP e e-mail; depósito e saque 20 por minuto por usuário; demais rotas 60 por minuto. Na VPS, o Nginx ainda limita 10 requisições por segundo por IP.
 - **IP real:** o Laravel confia só nos proxies internos (faixas privadas do Docker), então um `X-Forwarded-For` forjado não escapa dos limites. Há um teste que reproduz esse ataque.
@@ -136,7 +137,7 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 
 | Suíte | Quantidade | O que cobre |
 |---|---|---|
-| PHPUnit (backend) | 99 | Depósito, saque, saldo insuficiente, idempotência, valores inválidos e de arredondamento, histórico e filtros, resumo do mês no fuso de São Paulo, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
+| PHPUnit (backend) | 99 | Depósito, saque, saldo insuficiente, idempotência, valores inválidos e de arredondamento, histórico e filtros no dia de São Paulo, resumo do mês no mesmo fuso, erro inesperado sem detalhe interno, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
 | Vitest (frontend) | 136 | Cliente HTTP e sessão expirada, chave de idempotência, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários, painel, extrato, datas do filtro, toasts e medidor de senha |
 
 A maior parte dos testes de backend é de cenários de falha. O CI também cobra o padrão de código: Pint (PSR-12) e Larastan (nível 6) no backend; Prettier (100 colunas), oxlint, ESLint e checagem de tipos com `vue-tsc` no frontend.
@@ -223,7 +224,7 @@ Com PHP 8.4, Composer 2, Node 24 e PostgreSQL 16 instalados: crie os bancos `wal
 
 A aplicação roda em uma VPS própria com Docker Compose: um container Nginx com o Vue já compilado (que repassa `/api`), um com PHP-FPM e Laravel e um com PostgreSQL, atrás do Nginx do host, que cuida do HTTPS.
 
-Todo push passa pelo GitHub Actions: auditoria de dependências, Pint, Larastan e PHPUnit em PostgreSQL no backend; lint, tipos, Vitest e build no frontend. Na `main`, o deploy só começa com os dois jobs verdes **e** aprovação manual no ambiente `production`. O script de deploy reconstrói as imagens, sobe os containers, roda as migrations e só termina com sucesso quando `/api/health` responde.
+Todo push passa pelo GitHub Actions: auditoria de dependências, Pint, Larastan e PHPUnit em PostgreSQL no backend; formatação, lint, tipos, Vitest e build no frontend. Na `main`, o deploy só começa com os dois jobs verdes **e** aprovação manual no ambiente `production`. O script de deploy reconstrói as imagens, sobe os containers, roda as migrations e só termina com sucesso quando `/api/health` responde.
 
 O trabalho é feito na branch `dev`, com commits no padrão Conventional Commits em português, e chega à `main` por Pull Request com merge commit, preservando o histórico.
 
