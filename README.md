@@ -120,7 +120,7 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 
 - **Acesso só à própria carteira:** a API nunca recebe `wallet_id` nem `user_id`; usa sempre o dono do token.
 - **Token:** expira em 24 horas (`SANCTUM_EXPIRATION`), tem o prefixo `fwallet_` para a varredura de segredos do GitHub reconhecer um vazamento e é revogado no logout.
-- **Senha e e-mail:** no cadastro, e-mail validado (`email:rfc,filter`) e senha com 8+ caracteres, maiúscula, minúscula, número e símbolo. O login confere só o formato do e-mail, para não revelar a política nem bloquear contas antigas.
+- **Senha e e-mail:** no cadastro, e-mail validado (`email:rfc,filter`) e senha com 8+ caracteres, maiúscula, minúscula, número e símbolo. O login confere o formato do e-mail e o tamanho da senha (8 a 255 caracteres), mas não exige maiúscula, número ou símbolo, para não revelar a política nem bloquear contas antigas.
 - **Limites de requisição:** registro 5 por minuto por IP; login 5 por minuto por IP e e-mail; depósito e saque 20 por minuto por usuário; demais rotas 60 por minuto. Na VPS, o Nginx ainda limita 10 requisições por segundo por IP.
 - **IP real:** o Laravel confia só nos proxies internos (faixas privadas do Docker), então um `X-Forwarded-For` forjado não escapa dos limites. Há um teste que reproduz esse ataque.
 - **CSRF:** não se aplica, porque o token vai no cabeçalho `Authorization`, que o navegador nunca envia sozinho. O modo de cookie do Sanctum está desligado.
@@ -134,8 +134,8 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 
 | Suíte | Quantidade | O que cobre |
 |---|---|---|
-| PHPUnit (backend) | 87 | Depósito, saque, saldo insuficiente, valores inválidos e de arredondamento, histórico e filtros, resumo do mês no fuso de São Paulo, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
-| Vitest (frontend) | 102 | Cliente HTTP e sessão expirada, stores, guard de rotas, máscara e leitura de valores, formulários, painel, extrato, toasts e medidor de senha |
+| PHPUnit (backend) | 88 | Depósito, saque, saldo insuficiente, valores inválidos e de arredondamento, histórico e filtros, resumo do mês no fuso de São Paulo, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
+| Vitest (frontend) | 106 | Cliente HTTP e sessão expirada, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários, painel, extrato, toasts e medidor de senha |
 
 A maior parte dos testes de backend é de cenários de falha. O CI também roda Pint, Larastan (nível 6), oxlint, ESLint e checagem de tipos com `vue-tsc`.
 
