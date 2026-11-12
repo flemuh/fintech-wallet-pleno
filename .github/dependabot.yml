@@ -1,5 +1,5 @@
-# Dependabot: abre PRs semanais com atualizações das dependências e, a qualquer momento,
-# quando sai correção de segurança. Os PRs vão para a dev, como todo o resto do trabalho.
+# Dependabot: um PR por mês para cada ecossistema, com todas as atualizações juntas.
+# Correções de segurança continuam chegando na hora. Os PRs vão para a dev.
 version: 2
 
 updates:
@@ -7,49 +7,49 @@ updates:
     directory: /backend
     target-branch: dev
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       timezone: America/Sao_Paulo
     commit-message:
       prefix: build
       include: scope
     groups:
-      # Atualizações menores juntas num PR só; versões major continuam em PRs separados
-      menores:
-        update-types: [minor, patch]
+      todas:
+        patterns: ['*']
 
   - package-ecosystem: npm
     directory: /frontend
     target-branch: dev
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       timezone: America/Sao_Paulo
     commit-message:
       prefix: build
       include: scope
     groups:
-      menores:
-        update-types: [minor, patch]
+      todas:
+        patterns: ['*']
 
   - package-ecosystem: github-actions
     directory: /
     target-branch: dev
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       timezone: America/Sao_Paulo
     commit-message:
       prefix: build
       include: scope
-
+    groups:
+      todas:
+        patterns: ['*']
   - package-ecosystem: docker
     directories: [/docker/php, /docker/nginx]
     target-branch: dev
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
       timezone: America/Sao_Paulo
     commit-message:
       prefix: build
       include: scope
+    groups:
+      todas:
+        patterns: ['*']
