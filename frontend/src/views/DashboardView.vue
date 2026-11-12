@@ -36,7 +36,9 @@ onMounted(() => wallet.carregarPainel())
         </div>
         <div class="cartao p-5">
           <dt class="flex items-center gap-2 text-sm text-slate-500">
-            <span class="flex size-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+            <span
+              class="flex size-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-700"
+            >
               <ArrowDownLeft class="size-4" aria-hidden="true" />
             </span>
             Depositado no mês
@@ -47,7 +49,9 @@ onMounted(() => wallet.carregarPainel())
         </div>
         <div class="cartao p-5">
           <dt class="flex items-center gap-2 text-sm text-slate-500">
-            <span class="flex size-8 items-center justify-center rounded-full bg-red-50 text-red-700">
+            <span
+              class="flex size-8 items-center justify-center rounded-full bg-red-50 text-red-700"
+            >
               <ArrowUpRight class="size-4" aria-hidden="true" />
             </span>
             Sacado no mês

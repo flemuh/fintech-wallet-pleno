@@ -112,11 +112,7 @@ function mudarPagina(numero: number): void {
     >
       <div>
         <label for="filtro-tipo" class="block text-sm font-medium text-slate-700">Tipo</label>
-        <select
-          id="filtro-tipo"
-          v-model="formulario.type"
-          class="campo mt-1"
-        >
+        <select id="filtro-tipo" v-model="formulario.type" class="campo mt-1">
           <option value="">Todos</option>
           <option value="credit">Depósitos (crédito)</option>
           <option value="debit">Saques (débito)</option>
@@ -148,20 +144,8 @@ function mudarPagina(numero: number): void {
       />
 
       <div class="flex gap-2">
-        <button
-          type="submit"
-          :disabled="carregando"
-          class="botao-primario py-2"
-        >
-          Filtrar
-        </button>
-        <button
-          type="button"
-          class="botao-secundario py-2"
-          @click="limparFiltros"
-        >
-          Limpar
-        </button>
+        <button type="submit" :disabled="carregando" class="botao-primario py-2">Filtrar</button>
+        <button type="button" class="botao-secundario py-2" @click="limparFiltros">Limpar</button>
       </div>
     </form>
 

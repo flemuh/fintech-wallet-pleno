@@ -34,7 +34,11 @@ function valorComSinal(transacao: Transacao): string {
     </p>
     <!-- Celular: cada transação vira um cartão, sem rolagem lateral -->
     <ul v-else class="cartao divide-y divide-violet-100 sm:hidden">
-      <li v-for="transacao in transacoes" :key="`cartao-${transacao.id}`" class="space-y-1 px-4 py-3">
+      <li
+        v-for="transacao in transacoes"
+        :key="`cartao-${transacao.id}`"
+        class="space-y-1 px-4 py-3"
+      >
         <div class="flex items-center justify-between gap-2">
           <span
             class="rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -42,16 +46,15 @@ function valorComSinal(transacao: Transacao): string {
           >
             {{ rotuloDoTipo(transacao) }}
           </span>
-          <span
-            class="font-semibold whitespace-nowrap"
-            :class="classeDoValor(transacao)"
-          >
+          <span class="font-semibold whitespace-nowrap" :class="classeDoValor(transacao)">
             {{ valorComSinal(transacao) }}
           </span>
         </div>
         <div class="flex items-center justify-between gap-2 text-xs text-slate-500">
           <span>{{ formatarDataEHora(transacao.created_at) }}</span>
-          <span class="whitespace-nowrap">Saldo: {{ formatarCentavos(transacao.balance_after) }}</span>
+          <span class="whitespace-nowrap"
+            >Saldo: {{ formatarCentavos(transacao.balance_after) }}</span
+          >
         </div>
       </li>
     </ul>
@@ -81,10 +84,7 @@ function valorComSinal(transacao: Transacao): string {
                 {{ rotuloDoTipo(transacao) }}
               </span>
             </td>
-            <td
-              class="px-4 py-3 text-right font-medium"
-              :class="classeDoValor(transacao)"
-            >
+            <td class="px-4 py-3 text-right font-medium" :class="classeDoValor(transacao)">
               {{ valorComSinal(transacao) }}
             </td>
             <td class="px-4 py-3 text-right text-slate-600">

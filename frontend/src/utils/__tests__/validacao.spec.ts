@@ -4,7 +4,13 @@ import { avaliarSenha, emailValido, forcaDaSenha, senhaForte } from '@/utils/val
 
 describe('avaliarSenha', () => {
   it('marca cada critério separadamente', () => {
-    expect(avaliarSenha('senha').map((criterio) => criterio.atendido)).toEqual([false, false, true, false, false])
+    expect(avaliarSenha('senha').map((criterio) => criterio.atendido)).toEqual([
+      false,
+      false,
+      true,
+      false,
+      false,
+    ])
     expect(avaliarSenha('Senha@1234').every((criterio) => criterio.atendido)).toBe(true)
   })
 
@@ -28,10 +34,14 @@ describe('emailValido', () => {
     expect(emailValido(email)).toBe(true)
   })
 
-  it.each(['@emailqualquer', 'ana@', 'ana@exemplo', 'ana souza@exemplo.com', 'ana@@exemplo.com', ''])(
-    'recusa "%s"',
-    (email) => {
-      expect(emailValido(email)).toBe(false)
-    },
-  )
+  it.each([
+    '@emailqualquer',
+    'ana@',
+    'ana@exemplo',
+    'ana souza@exemplo.com',
+    'ana@@exemplo.com',
+    '',
+  ])('recusa "%s"', (email) => {
+    expect(emailValido(email)).toBe(false)
+  })
 })

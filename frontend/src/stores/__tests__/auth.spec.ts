@@ -45,7 +45,9 @@ describe('store de autenticação', () => {
     vi.mocked(api.entrar).mockRejectedValue(new Error('422'))
     const auth = useAuthStore()
 
-    await expect(auth.entrar({ email: 'ana@exemplo.com', password: 'errada' })).rejects.toThrow('422')
+    await expect(auth.entrar({ email: 'ana@exemplo.com', password: 'errada' })).rejects.toThrow(
+      '422',
+    )
 
     expect(auth.autenticado).toBe(false)
     expect(armazenamentoDoToken.obter()).toBeNull()

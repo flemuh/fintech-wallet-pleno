@@ -35,7 +35,9 @@ const classeDoBotao = computed(() =>
 const excedeOSaldo = computed(() => {
   const centavos = lerValorEmReais(valor.value)
 
-  return props.saldoDisponivel !== undefined && centavos !== null && centavos > props.saldoDisponivel
+  return (
+    props.saldoDisponivel !== undefined && centavos !== null && centavos > props.saldoDisponivel
+  )
 })
 
 const erroDoValor = computed(() => {

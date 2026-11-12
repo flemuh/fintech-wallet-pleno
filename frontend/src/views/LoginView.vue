@@ -20,7 +20,9 @@ const erroDoEmail = ref<string | null>(null)
 const erroDaSenha = ref<string | null>(null)
 
 async function entrar(): Promise<void> {
-  erroDoEmail.value = emailValido(formulario.email) ? null : 'Informe um e-mail válido, como nome@exemplo.com.'
+  erroDoEmail.value = emailValido(formulario.email)
+    ? null
+    : 'Informe um e-mail válido, como nome@exemplo.com.'
   erroDaSenha.value = senhaDeLoginValida(formulario.password)
     ? null
     : 'A senha deve ter pelo menos 8 caracteres.'
@@ -36,11 +38,7 @@ async function entrar(): Promise<void> {
 
 <template>
   <main class="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-    <form
-      class="cartao w-full max-w-sm space-y-4 p-6"
-      novalidate
-      @submit.prevent="entrar"
-    >
+    <form class="cartao w-full max-w-sm space-y-4 p-6" novalidate @submit.prevent="entrar">
       <AppLogo />
       <h1 class="text-xl font-semibold text-slate-900">Entrar</h1>
 
@@ -63,11 +61,7 @@ async function entrar(): Promise<void> {
         :erro="erroDaSenha ?? errosDosCampos.password?.[0]"
       />
 
-      <button
-        type="submit"
-        :disabled="enviando"
-        class="botao-primario w-full"
-      >
+      <button type="submit" :disabled="enviando" class="botao-primario w-full">
         {{ enviando ? 'Entrando...' : 'Entrar' }}
       </button>
 

@@ -37,7 +37,10 @@ async function montarTela(rotaInicial: string) {
   return { wrapper, roteador }
 }
 
-async function clicarNoBotao(wrapper: Awaited<ReturnType<typeof montarTela>>['wrapper'], texto: string) {
+async function clicarNoBotao(
+  wrapper: Awaited<ReturnType<typeof montarTela>>['wrapper'],
+  texto: string,
+) {
   await wrapper
     .findAll('button')
     .find((botao) => botao.text() === texto)
