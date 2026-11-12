@@ -24,7 +24,35 @@ function valorComSinal(transacao: Transacao): string {
     <p v-if="transacoes.length === 0" class="cartao p-6 text-center text-sm text-slate-500">
       {{ mensagemVazia ?? 'Nenhuma transação ainda.' }}
     </p>
-    <div v-else class="cartao overflow-x-auto">
+    <!-- Celular: cada transação vira um cartão, sem rolagem lateral -->
+    <ul v-else class="cartao divide-y divide-violet-100 sm:hidden">
+      <li v-for="transacao in transacoes" :key="`cartao-${transacao.id}`" class="space-y-1 px-4 py-3">
+        <div class="flex items-center justify-between gap-2">
+          <span
+            class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+            :class="
+              transacao.type === 'credit'
+                ? 'bg-emerald-50 text-emerald-800'
+                : 'bg-red-50 text-red-800'
+            "
+          >
+            {{ rotuloDoTipo(transacao) }}
+          </span>
+          <span
+            class="font-semibold whitespace-nowrap"
+            :class="transacao.type === 'credit' ? 'text-emerald-700' : 'text-red-700'"
+          >
+            {{ valorComSinal(transacao) }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between gap-2 text-xs text-slate-500">
+          <span>{{ formatarDataEHora(transacao.created_at) }}</span>
+          <span class="whitespace-nowrap">Saldo: {{ formatarCentavos(transacao.balance_after) }}</span>
+        </div>
+      </li>
+    </ul>
+    <!-- Telas maiores: tabela completa -->
+    <div v-if="transacoes.length > 0" class="cartao hidden overflow-x-auto sm:block">
       <table class="min-w-full text-sm">
         <thead class="bg-violet-50 text-left text-violet-900">
           <tr>
