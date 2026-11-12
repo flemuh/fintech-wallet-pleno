@@ -6,7 +6,7 @@ use Tests\TestCase;
 
 class HealthCheckTest extends TestCase
 {
-    public function test_health_check_returns_ok(): void
+    public function test_health_check_responde_ok(): void
     {
         $this->getJson('/api/health')
             ->assertOk()

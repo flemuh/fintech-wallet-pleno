@@ -33,7 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Formato único de erro: { message, code }. A validação acrescenta o campo errors
         // (detalhe por campo), e as exceções de domínio têm o próprio render().
-        $erro = fn (string $mensagem, string $codigo, int $status, array $cabecalhos = []): JsonResponse => response()->json(['message' => $mensagem, 'code' => $codigo], $status, $cabecalhos);
+        $erro = function (string $mensagem, string $codigo, int $status, array $cabecalhos = []): JsonResponse {
+            return response()->json(['message' => $mensagem, 'code' => $codigo], $status, $cabecalhos);
+        };
 
         $exceptions->render(fn (AuthenticationException $e, Request $request) => $ehApi($request)
             ? $erro('Não autenticado.', 'unauthenticated', 401)
