@@ -13,11 +13,9 @@ use Illuminate\Http\Response;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly AuthService $servico) {}
-
-    public function registrar(RegisterRequest $request): JsonResponse
+    public function registrar(RegisterRequest $request, AuthService $servico): JsonResponse
     {
-        $resultado = $this->servico->registrar($request->validated());
+        $resultado = $servico->registrar($request->validated());
 
         return response()->json([
             'user' => new UserResource($resultado['usuario']),
@@ -25,9 +23,9 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function entrar(LoginRequest $request): JsonResponse
+    public function entrar(LoginRequest $request, AuthService $servico): JsonResponse
     {
-        $resultado = $this->servico->entrar(
+        $resultado = $servico->entrar(
             $request->string('email')->toString(),
             $request->string('password')->toString(),
         );
@@ -38,11 +36,11 @@ class AuthController extends Controller
         ]);
     }
 
-    public function sair(Request $request): Response
+    public function sair(Request $request, AuthService $servico): Response
     {
         /** @var User $usuario */
         $usuario = $request->user();
-        $this->servico->sair($usuario);
+        $servico->sair($usuario);
 
         return response()->noContent();
     }

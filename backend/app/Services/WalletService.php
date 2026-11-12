@@ -41,12 +41,12 @@ class WalletService
      */
     public function historico(User $usuario, array $filtros = []): LengthAwarePaginator
     {
-        $carteira = Wallet::where('user_id', $usuario->id)->firstOrFail();
-
-        return $carteira->transactions()
+        return $this->carteiraDo($usuario)->transactions()
             ->when($filtros['type'] ?? null, fn ($consulta, $tipo) => $consulta->where('type', $tipo))
-            ->when($filtros['from'] ?? null, fn ($consulta, $de) => $consulta->where('created_at', '>=', Carbon::parse($de, self::FUSO_DO_NEGOCIO)->startOfDay()->utc()))
-            ->when($filtros['to'] ?? null, fn ($consulta, $ate) => $consulta->where('created_at', '<=', Carbon::parse($ate, self::FUSO_DO_NEGOCIO)->endOfDay()->utc()))
+            ->when($filtros['from'] ?? null, fn ($consulta, $de) => $consulta
+                ->where('created_at', '>=', Carbon::parse($de, self::FUSO_DO_NEGOCIO)->startOfDay()->utc()))
+            ->when($filtros['to'] ?? null, fn ($consulta, $ate) => $consulta
+                ->where('created_at', '<=', Carbon::parse($ate, self::FUSO_DO_NEGOCIO)->endOfDay()->utc()))
             ->latest()
             ->latest('id') // desempate estável quando duas movimentações têm o mesmo instante
             ->paginate((int) ($filtros['per_page'] ?? 15));
@@ -60,7 +60,7 @@ class WalletService
      */
     public function resumo(User $usuario): array
     {
-        $carteira = Wallet::where('user_id', $usuario->id)->firstOrFail();
+        $carteira = $this->carteiraDo($usuario);
 
         $inicioDoMes = Carbon::now(self::FUSO_DO_NEGOCIO)->startOfMonth();
         $inicioDoProximoMes = $inicioDoMes->copy()->addMonth();
@@ -90,7 +90,7 @@ class WalletService
         try {
             return DB::transaction(function () use ($usuario, $tipo, $valorEmCentavos) {
                 // Trava a linha: duas operações simultâneas não leem o mesmo saldo
-                $carteira = Wallet::where('user_id', $usuario->id)->lockForUpdate()->firstOrFail();
+                $carteira = $this->carteiraDo($usuario, travar: true);
 
                 $novoSaldo = $tipo === TransactionType::Credit
                     ? $carteira->balance + $valorEmCentavos
@@ -117,5 +117,17 @@ class WalletService
 
             throw $erro;
         }
+    }
+
+    /** Carteira do usuário. Com $travar, a linha fica bloqueada até o fim da transação do banco. */
+    private function carteiraDo(User $usuario, bool $travar = false): Wallet
+    {
+        $consulta = Wallet::where('user_id', $usuario->id);
+
+        if ($travar) {
+            $consulta->lockForUpdate();
+        }
+
+        return $consulta->firstOrFail();
     }
 }
