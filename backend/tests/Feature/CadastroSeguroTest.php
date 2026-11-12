@@ -76,6 +76,22 @@ class CadastroSeguroTest extends TestCase
             ->assertJsonPath('errors.password.0', $mensagem);
     }
 
+    public function test_nome_acima_de_100_caracteres_retorna_422(): void
+    {
+        $this->postJson('/api/auth/register', $this->dados(['name' => str_repeat('a', 101)]))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.name.0', 'O campo nome não pode ter mais de 100 caracteres.');
+    }
+
+    public function test_email_acima_de_100_caracteres_retorna_422(): void
+    {
+        $email = str_repeat('a', 60).'@'.str_repeat('b', 36).'.com';
+
+        $this->postJson('/api/auth/register', $this->dados(['email' => $email]))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.email.0', 'O campo e-mail não pode ter mais de 100 caracteres.');
+    }
+
     /**
      * @return array<string, array{0: string}>
      */

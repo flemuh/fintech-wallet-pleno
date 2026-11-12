@@ -36,9 +36,12 @@ describe('avaliarSenha', () => {
 })
 
 describe('emailValido', () => {
-  it.each(['ana@exemplo.com', 'ana.souza+teste@empresa.com.br'])('aceita %s', (email) => {
-    expect(emailValido(email)).toBe(true)
-  })
+  it.each(['ana@exemplo.com', 'ana.souza+teste@empresa.com.br', "o'brien@exemplo.com.br"])(
+    'aceita %s',
+    (email) => {
+      expect(emailValido(email)).toBe(true)
+    },
+  )
 
   it.each([
     '@emailqualquer',
@@ -47,6 +50,12 @@ describe('emailValido', () => {
     'ana souza@exemplo.com',
     'ana@@exemplo.com',
     '',
+    'flemuh@gmail.com,,mmmm',
+    'ana@ex_emplo.com',
+    'ana@exemplo..com',
+    'ana@-exemplo.com',
+    'joão@exemplo.com',
+    `${'a'.repeat(60)}@${'b'.repeat(36)}.com`,
   ])('recusa "%s"', (email) => {
     expect(emailValido(email)).toBe(false)
   })

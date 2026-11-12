@@ -10,7 +10,7 @@ Carteira digital pessoal com depósitos, saques e histórico de transações. AP
 | **Repositório** | https://github.com/flemuh/fintech-wallet-pleno |
 | **Usuário de teste** | `demo@wallet.speedlora.app` / `Demo@12345` |
 
-O usuário de teste já tem saldo e movimentações dos últimos 30 dias. Para criar outra conta, use o link **Criar conta** na tela de login: nome, e-mail válido e senha de 8 a 64 caracteres, com letra maiúscula, letra minúscula, número e símbolo. A tela mostra a força da senha enquanto você digita, e a carteira nova começa com R$ 0,00.
+O usuário de teste já tem saldo e movimentações dos últimos 30 dias. Para criar outra conta, use o link **Criar conta** na tela de login; a senha precisa de 8 a 64 caracteres, com maiúscula, minúscula, número e símbolo.
 
 ## Sumário
 
@@ -54,11 +54,11 @@ fintech-wallet-pleno/
 
 **Atomicidade e concorrência.** Depósito e saque rodam dentro de `DB::transaction` com `lockForUpdate` na carteira, e o banco tem `CHECK (balance >= 0)` e `CHECK (amount > 0)`. Se qualquer passo falhar, nada é gravado; um saque recusado não deixa registro no histórico.
 
-**Idempotência em depósito e saque.** Se a rede cai depois que o servidor gravou a operação, mas antes de a resposta chegar, um reenvio criaria uma segunda operação. Como no Stripe, o cliente manda um cabeçalho `Idempotency-Key` (o frontend gera um UUID por operação e o repete no reenvio do mesmo valor). A chave é gravada na mesma transação da movimentação, com um hash do tipo e do valor: a mesma chave devolve a operação já feita, com o cabeçalho `Idempotent-Replayed: true`, e a mesma chave com outra operação é recusada (422 `idempotency_key_reused`). Como a carteira está travada, duas requisições simultâneas com a mesma chave passam uma de cada vez. Uma operação recusada não gasta a chave. O cabeçalho é opcional: sem ele, cada requisição é uma operação.
+**Idempotência em depósito e saque.** Se a rede cai depois que o servidor gravou a operação, um reenvio criaria uma segunda operação. Como no Stripe, o cliente manda o cabeçalho opcional `Idempotency-Key`, e o frontend gera um UUID por operação. A chave é gravada na mesma transação da movimentação: repetida, devolve a operação já feita (`Idempotent-Replayed: true`); usada para outra operação, é recusada (422 `idempotency_key_reused`). Uma operação recusada não gasta a chave.
 
 **Saldo após a operação gravado.** Cada transação guarda `balance_after` no momento em que é criada. O histórico não recalcula saldo, e as transações são imutáveis (sem rota de edição ou exclusão).
 
-**Fuso do produto: horário de Brasília.** A API devolve datas em UTC no formato ISO 8601, o padrão de APIs públicas como as do GitHub e do Stripe, porque um instante em UTC não tem ambiguidade. As regras que dependem do dia, como o mês atual do painel e o período do filtro do extrato, seguem o horário de Brasília (`America/Sao_Paulo`), o fuso de referência do produto, como nos bancos brasileiros. A conversão acontece na consulta, e há testes para a virada do mês e para uma transação às 22h53, que em UTC já cai no dia seguinte. Na tela, os filtros de data usam dd/mm/aaaa em qualquer navegador, com um botão que abre o calendário do próprio navegador.
+**Fuso do produto: horário de Brasília.** A API devolve datas em UTC (ISO 8601), como as APIs do GitHub e do Stripe. As regras que dependem do dia, como o mês atual do painel e o período do filtro, seguem `America/Sao_Paulo`, como nos bancos brasileiros. Há testes para a virada do mês e para uma transação às 22h53, que em UTC já cai no dia seguinte. Na tela, as datas usam dd/mm/aaaa, com o calendário do navegador.
 
 **PostgreSQL também nos testes.** O CI roda a suíte em PostgreSQL 16, o mesmo banco da produção, porque `lockForUpdate` e `CHECK` não se comportam igual no SQLite.
 
@@ -66,7 +66,7 @@ fintech-wallet-pleno/
 
 **Mesma origem em produção.** O Nginx serve o Vue em `/` e repassa só `/api` ao Laravel. No desenvolvimento, o proxy do Vite faz o mesmo, então o navegador nunca depende de CORS. O CORS restrito existe só como defesa extra.
 
-**Interface sem biblioteca de componentes.** Tailwind CSS 4 e ícones do Lucide. Os componentes (campo, campo de data com calendário, alerta, paginação, toast, medidor de senha, formulário de operação e tabela, que vira cartões no celular) são do próprio projeto. Depósito e saque usam o mesmo `OperationForm`, sem código duplicado. O campo de valor tem máscara de real (digitar `1050` vira `10,50`).
+**Interface sem biblioteca de componentes.** Tailwind CSS 4 e ícones do Lucide, com componentes do próprio projeto. Depósito e saque usam o mesmo `OperationForm`. O campo de valor tem máscara de real (digitar `1050` vira `10,50`), e os formulários mostram o erro ao sair do campo e o tiram assim que ele fica certo.
 
 **Docker no desenvolvimento e na produção.** A mesma imagem do PHP serve os dois ambientes, com estágios diferentes.
 
@@ -122,13 +122,14 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 ## Segurança
 
 - **Acesso só à própria carteira:** a API nunca recebe `wallet_id` nem `user_id`; usa sempre o dono do token.
-- **Token:** expira em 24 horas (`SANCTUM_EXPIRATION`), tem o prefixo `fwallet_`, que torna um token vazado fácil de achar numa varredura de segredos (por exemplo, um padrão personalizado no secret scanning do GitHub), e é revogado no logout.
-- **Senha e e-mail:** no cadastro, e-mail validado (`email:rfc,filter`) e senha de 8 a 64 caracteres, com maiúscula, minúscula, número e símbolo. A senha também não pode passar de 72 bytes, o limite do bcrypt, que ignoraria o resto sem avisar (acentos ocupam 2 bytes cada). O login só confere o formato do e-mail e se a senha foi preenchida: qualquer senha errada recebe o mesmo "Credenciais inválidas.", e a resposta leva o mesmo tempo exista o e-mail ou não, para não revelar quais contas estão cadastradas.
+- **Token:** expira em 24 horas (`SANCTUM_EXPIRATION`), é revogado no logout e tem o prefixo `fwallet_`, que facilita achar um token vazado numa varredura de segredos.
+- **Cadastro:** nome e e-mail com até 100 caracteres, e-mail validado (`email:rfc,filter`) e senha de 8 a 64 caracteres e no máximo 72 bytes, o limite do bcrypt, que ignoraria o resto sem avisar.
+- **Login:** qualquer senha errada recebe o mesmo "Credenciais inválidas.", no mesmo tempo de resposta exista o e-mail ou não, para não revelar quais contas estão cadastradas.
 - **Limites de requisição:** registro 5 por minuto por IP; login 5 por minuto por IP e e-mail; depósito e saque 20 por minuto por usuário; demais rotas 60 por minuto. Na VPS, o Nginx ainda limita 10 requisições por segundo por IP.
 - **IP real:** o Laravel confia só nos proxies internos (faixas privadas do Docker), então um `X-Forwarded-For` forjado não escapa dos limites. Há um teste que reproduz esse ataque.
 - **CSRF:** não se aplica, porque o token vai no cabeçalho `Authorization`, que o navegador nunca envia sozinho. O modo de cookie do Sanctum está desligado.
 - **Cabeçalhos:** HSTS, Content-Security-Policy (`default-src 'self'`), `X-Frame-Options: DENY` e `X-Content-Type-Options: nosniff`.
-- **Cadeia de dependências:** `composer audit` e `npm audit` no CI; o npm instala sem scripts (`--ignore-scripts`) no CI, na imagem e no desenvolvimento. O `minimatch` e o `glob`, usados pelo ESLint e pelo `@vue/test-utils`, ficam presos nas versões corrigidas por `overrides` no `package.json`, até as duas ferramentas atualizarem; assim o `npm audit` não tem alertas. O Dependabot abre PRs semanais para a `dev` (Composer, npm, actions do CI e imagens Docker) e alerta sobre falhas conhecidas; o CodeQL analisa o código TypeScript e os workflows a cada push (ele não cobre PHP, que fica com o Larastan).
+- **Dependências:** `composer audit` e `npm audit` no CI, npm sem scripts de instalação (`--ignore-scripts`) e `overrides` para versões corrigidas do `minimatch` e do `glob`. O Dependabot abre PRs semanais para a `dev`, e o CodeQL analisa o TypeScript e os workflows a cada push.
 - **Infraestrutura:** banco sem porta publicada, containers com limite de memória e CPU, deploy só com CI verde e aprovação manual, chave do CI restrita a executar o script de deploy.
 
 **Trade-off assumido:** o token fica no `localStorage`, legível por JavaScript em caso de XSS. O cookie HttpOnly resolveria isso, mas traria o CSRF de volta e, para esconder o token de vez, exigiria um BFF, fora do escopo pedido. O risco é reduzido pela CSP restritiva, pelo Vue escapar todo texto renderizado (o projeto não usa `v-html`) e pela expiração do token.
@@ -137,10 +138,10 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 
 | Suíte | Quantidade | O que cobre |
 |---|---|---|
-| PHPUnit (backend) | 104 | Depósito, saque, saldo insuficiente, idempotência, valores inválidos e de arredondamento, histórico e filtros no dia de São Paulo, resumo do mês no mesmo fuso, erro inesperado sem detalhe interno, registro e login, senha fraca, limite de 64 caracteres e 72 bytes, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
-| Vitest (frontend) | 146 | Cliente HTTP e sessão expirada, chave de idempotência, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários com validação ao vivo e limites, painel, extrato, datas do filtro, toasts e medidor de senha |
+| PHPUnit (backend) | 106 | Depósito, saque, saldo insuficiente, idempotência, valores inválidos e de arredondamento, histórico e filtros no dia de São Paulo, resumo do mês no mesmo fuso, erro inesperado sem detalhe interno, registro e login, senha fraca, limite de 64 caracteres e 72 bytes, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
+| Vitest (frontend) | 153 | Cliente HTTP e sessão expirada, chave de idempotência, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários com validação ao vivo e limites, painel, extrato, datas do filtro, toasts e medidor de senha |
 
-A maior parte dos testes de backend é de cenários de falha. O CI também cobra o padrão de código: Pint (PSR-12) e Larastan (nível 6) no backend; Prettier (100 colunas), oxlint, ESLint e checagem de tipos com `vue-tsc` no frontend.
+A maior parte dos testes de backend é de cenários de falha. O CI também cobra o padrão de código: Pint (padrão do Laravel) e Larastan (nível 6) no backend; Prettier (100 colunas), oxlint, ESLint e checagem de tipos com `vue-tsc` no frontend.
 
 ## Pré-requisitos
 
@@ -230,7 +231,8 @@ O trabalho é feito na branch `dev`, com commits no padrão Conventional Commits
 
 ## Limitações conhecidas e próximos passos
 
-- **Alguns segundos fora do ar a cada deploy.** O script reconstrói o container do backend, que roda as migrations antes de voltar a responder. Hoje o risco é baixo: só o dono do projeto faz deploy, e a aprovação manual escolhe o momento. Para eliminar a parada, o caminho comum é o deploy blue-green ou rolling: o container novo sobe ao lado do antigo, passa no health check (`/api/health`) e só então o Nginx troca o tráfego. As migrations precisam funcionar com as duas versões ao mesmo tempo (primeiro adicionar, depois remover). Ferramentas como o Kamal e o docker-rollout fazem essa troca com Docker.
-- **As chaves de idempotência não expiram.** A tabela cresce uma linha por operação feita com chave. O próximo passo seria apagar as de mais de 24 horas, prazo que o Stripe também usa, com o `Prunable` do Eloquent e o `model:prune` agendado.
-- **Senhas conhecidas de vazamentos não são recusadas.** O cadastro exige senha forte, mas aceita uma senha que cumpre as regras e já apareceu em vazamentos. O risco é o ataque com listas de senhas vazadas, que o limite de 5 tentativas de login por minuto já reduz. A correção é uma regra no `RegisterRequest`, `Password::uncompromised()`, que consulta o Have I Been Pwned por k-anonymity: só os 5 primeiros caracteres do hash SHA-1 da senha saem do servidor. Ficou de fora do MVP porque faz uma chamada externa a cada cadastro. Com ela, os testes usariam `Http::fake()`, e o cadastro continua liberado se o serviço cair.
-- **Um fuso para todos.** Quem usa o app fora do Brasil vê as datas e os filtros no horário de Brasília. O próximo passo seria guardar o fuso de cada usuário, preenchido no cadastro a partir do navegador (`Intl.DateTimeFormat().resolvedOptions().timeZone`) e validado com `timezone:all`, e usá-lo nos cálculos e na exibição.
+- **Alguns segundos fora do ar a cada deploy.** O container do backend é reconstruído e roda as migrations antes de voltar. A correção é um deploy blue-green (com Kamal ou docker-rollout): o container novo passa no `/api/health` antes de o Nginx trocar o tráfego.
+- **As chaves de idempotência não expiram.** A correção é apagar as de mais de 24 horas, como faz o Stripe, com o `Prunable` do Eloquent e o `model:prune` agendado.
+- **Senhas de vazamentos conhecidos não são recusadas.** O limite de 5 tentativas de login por minuto reduz o risco. A correção é `Password::uncompromised()` no `RegisterRequest`, que consulta o Have I Been Pwned sem enviar a senha; ficou de fora por fazer uma chamada externa a cada cadastro.
+- **O e-mail não é confirmado.** O cadastro confere o formato, não se o endereço existe. A correção é o `MustVerifyEmail` do Laravel, com um link de confirmação.
+- **Um fuso para todos.** Quem está fora do Brasil vê tudo no horário de Brasília. A correção é guardar o fuso de cada usuário, lido do navegador no cadastro.
