@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { LocationQuery, LocationQueryRaw, LocationQueryValue } from 'vue-router'
 
@@ -10,6 +10,7 @@ import AppField from '@/components/ui/AppField.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
 import TransactionTable from '@/components/wallet/TransactionTable.vue'
 import { useEnvio } from '@/composables/useEnvio'
+import { dataBrParaIso, dataIsoParaBr, mascararData } from '@/utils/date'
 
 const TRANSACOES_POR_PAGINA = 10
 
@@ -18,7 +19,12 @@ const roteador = useRouter()
 const { enviando: carregando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
 const pagina = ref<PaginaDeTransacoes | null>(null)
+// As datas ficam em dd/mm/aaaa na tela; a URL e a API usam aaaa-mm-dd
 const formulario = reactive({ type: '', from: '', to: '' })
+const errosDasDatas = reactive<{ from: string | null; to: string | null }>({ from: null, to: null })
+
+// Com filtro ativo, lista vazia quer dizer "nada encontrado", e não conta sem movimentação
+const temFiltro = computed(() => Boolean(rota.query.type || rota.query.from || rota.query.to))
 
 function primeiroTexto(valor: LocationQueryValue | LocationQueryValue[] | undefined): string {
   const texto = Array.isArray(valor) ? valor[0] : valor
@@ -50,8 +56,10 @@ watch(
 
     const filtros = lerFiltrosDaRota(query)
     formulario.type = filtros.type ?? ''
-    formulario.from = filtros.from ?? ''
-    formulario.to = filtros.to ?? ''
+    formulario.from = dataIsoParaBr(filtros.from ?? '')
+    formulario.to = dataIsoParaBr(filtros.to ?? '')
+    errosDasDatas.from = null
+    errosDasDatas.to = null
 
     await enviar(async () => {
       pagina.value = await listarTransacoes({ ...filtros, per_page: TRANSACOES_POR_PAGINA })
@@ -60,12 +68,26 @@ watch(
   { immediate: true },
 )
 
+// Campo vazio é aceito (sem filtro); preenchido, precisa ser uma data que existe
+function lerData(campo: 'from' | 'to'): string | null | undefined {
+  if (!formulario[campo]) return undefined
+
+  const dataIso = dataBrParaIso(formulario[campo])
+  errosDasDatas[campo] = dataIso ? null : 'Informe uma data válida, como 12/11/2026.'
+
+  return dataIso
+}
+
 function aplicarFiltros(): void {
+  const inicio = lerData('from')
+  const fim = lerData('to')
+  if (inicio === null || fim === null) return
+
   const query: LocationQueryRaw = {}
 
   if (formulario.type) query.type = formulario.type
-  if (formulario.from) query.from = formulario.from
-  if (formulario.to) query.to = formulario.to
+  if (inicio) query.from = inicio
+  if (fim) query.to = fim
 
   void roteador.push({ query })
 }
@@ -90,11 +112,7 @@ function mudarPagina(numero: number): void {
     >
       <div>
         <label for="filtro-tipo" class="block text-sm font-medium text-slate-700">Tipo</label>
-        <select
-          id="filtro-tipo"
-          v-model="formulario.type"
-          class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors hover:border-violet-300 focus:border-violet-600 focus:ring-4 focus:ring-violet-100 focus:outline-none"
-        >
+        <select id="filtro-tipo" v-model="formulario.type" class="campo mt-1">
           <option value="">Todos</option>
           <option value="credit">Depósitos (crédito)</option>
           <option value="debit">Saques (débito)</option>
@@ -108,32 +126,26 @@ function mudarPagina(numero: number): void {
         id="filtro-inicio"
         v-model="formulario.from"
         label="Data inicial"
-        type="date"
-        :erro="errosDosCampos.from?.[0]"
+        placeholder="dd/mm/aaaa"
+        inputmode="numeric"
+        autocomplete="off"
+        :mascara="mascararData"
+        :erro="errosDasDatas.from ?? errosDosCampos.from?.[0]"
       />
       <AppField
         id="filtro-fim"
         v-model="formulario.to"
         label="Data final"
-        type="date"
-        :erro="errosDosCampos.to?.[0]"
+        placeholder="dd/mm/aaaa"
+        inputmode="numeric"
+        autocomplete="off"
+        :mascara="mascararData"
+        :erro="errosDasDatas.to ?? errosDosCampos.to?.[0]"
       />
 
       <div class="flex gap-2">
-        <button
-          type="submit"
-          :disabled="carregando"
-          class="botao-primario py-2"
-        >
-          Filtrar
-        </button>
-        <button
-          type="button"
-          class="botao-secundario py-2"
-          @click="limparFiltros"
-        >
-          Limpar
-        </button>
+        <button type="submit" :disabled="carregando" class="botao-primario py-2">Filtrar</button>
+        <button type="button" class="botao-secundario py-2" @click="limparFiltros">Limpar</button>
       </div>
     </form>
 
@@ -141,7 +153,11 @@ function mudarPagina(numero: number): void {
     <p v-if="carregando && !pagina" class="mt-4 text-slate-500">Carregando...</p>
 
     <template v-if="pagina">
-      <TransactionTable :transacoes="pagina.data" class="mt-4" />
+      <TransactionTable
+        :transacoes="pagina.data"
+        :mensagem-vazia="temFiltro ? 'Nenhuma transação encontrada para esses filtros.' : undefined"
+        class="mt-4"
+      />
       <AppPagination
         class="mt-4"
         :pagina-atual="pagina.meta.current_page"

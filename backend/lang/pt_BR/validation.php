@@ -26,6 +26,8 @@ return [
     'password' => [
         'letters' => 'O campo :attribute deve conter pelo menos uma letra.',
         'numbers' => 'O campo :attribute deve conter pelo menos um número.',
+        'mixed' => 'O campo :attribute deve conter letras maiúsculas e minúsculas.',
+        'symbols' => 'O campo :attribute deve conter pelo menos um símbolo.',
     ],
 
     // Nomes de campos que valem para o sistema inteiro

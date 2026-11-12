@@ -18,7 +18,8 @@ export const armazenamentoDoUsuario = {
       return null
     }
   },
-  salvar: (usuario: Usuario): void => localStorage.setItem(CHAVE_DO_USUARIO, JSON.stringify(usuario)),
+  salvar: (usuario: Usuario): void =>
+    localStorage.setItem(CHAVE_DO_USUARIO, JSON.stringify(usuario)),
   limpar: (): void => localStorage.removeItem(CHAVE_DO_USUARIO),
 }
 

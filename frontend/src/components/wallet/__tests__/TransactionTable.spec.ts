@@ -43,4 +43,13 @@ describe('TransactionTable', () => {
     expect(wrapper.text()).toContain('- R$\u00a05,00')
     expect(wrapper.text()).toContain('R$\u00a05,50')
   })
+
+  it('usa a mensagem recebida quando a lista está vazia', () => {
+    const tabela = mount(TransactionTable, {
+      props: { transacoes: [], mensagemVazia: 'Nenhuma transação encontrada para esses filtros.' },
+    })
+
+    expect(tabela.text()).toContain('Nenhuma transação encontrada para esses filtros.')
+    expect(tabela.text()).not.toContain('Nenhuma transação ainda.')
+  })
 })

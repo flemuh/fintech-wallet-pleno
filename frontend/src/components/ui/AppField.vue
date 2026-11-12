@@ -7,6 +7,8 @@ const props = defineProps<{
   dica?: string
   erro?: string
   placeholder?: string
+  // Teclado do celular (ex.: "numeric" abre só números)
+  inputmode?: 'text' | 'numeric' | 'decimal' | 'email'
   // Texto fixo dentro do campo, à esquerda (ex.: "R$")
   prefixo?: string
   // Transforma o texto a cada digitação (ex.: máscara de valor em reais)
@@ -42,12 +44,10 @@ function aoDigitar(evento: Event): void {
         :type="type ?? 'text'"
         :autocomplete="autocomplete"
         :placeholder="placeholder"
+        :inputmode="inputmode"
         :aria-invalid="erro ? 'true' : undefined"
-        class="block w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors focus:border-violet-600 focus:ring-4 focus:ring-violet-100 focus:outline-none"
-        :class="[
-          erro ? 'border-red-500' : 'border-slate-300 hover:border-violet-300',
-          prefixo ? 'h-11 pl-10 text-lg' : '',
-        ]"
+        class="campo"
+        :class="[erro ? 'border-red-500' : '', prefixo ? 'h-11 pl-10 text-lg' : '']"
         @input="aoDigitar"
       />
     </div>

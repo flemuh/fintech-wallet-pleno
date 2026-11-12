@@ -103,4 +103,28 @@ describe('tela de login', () => {
 
     expect(tela.find('button').attributes('disabled')).toBeDefined()
   })
+
+  it('não envia e-mail inválido para a API', async () => {
+    const { tela } = await montarTela()
+
+    await tela.find('#email').setValue('@emailqualquer')
+    await tela.find('#password').setValue('qualquer')
+    await tela.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(api.entrar).not.toHaveBeenCalled()
+    expect(tela.text()).toContain('Informe um e-mail válido')
+  })
+
+  it('não envia senha com menos de 8 caracteres para a API', async () => {
+    const { tela } = await montarTela()
+
+    await tela.find('#email').setValue('ana@exemplo.com')
+    await tela.find('#password').setValue('curta12')
+    await tela.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(api.entrar).not.toHaveBeenCalled()
+    expect(tela.text()).toContain('pelo menos 8 caracteres')
+  })
 })

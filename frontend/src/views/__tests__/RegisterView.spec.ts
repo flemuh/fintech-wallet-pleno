@@ -37,7 +37,7 @@ async function montarTela() {
 async function preencherEEnviar(tela: Awaited<ReturnType<typeof montarTela>>['tela']) {
   await tela.find('#name').setValue('Ana Souza')
   await tela.find('#email').setValue('ana@exemplo.com')
-  await tela.find('#password').setValue('senha1234')
+  await tela.find('#password').setValue('Senha@1234')
   await tela.find('form').trigger('submit')
 }
 
@@ -92,5 +92,19 @@ describe('tela de cadastro', () => {
     await preencherEEnviar(tela)
 
     expect(tela.find('button').attributes('disabled')).toBeDefined()
+  })
+
+  it('não envia senha fraca nem e-mail inválido para a API', async () => {
+    const { tela } = await montarTela()
+
+    await tela.find('#name').setValue('Ana Souza')
+    await tela.find('#email').setValue('@emailqualquer')
+    await tela.find('#password').setValue('senha1234')
+    await tela.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(api.registrar).not.toHaveBeenCalled()
+    expect(tela.text()).toContain('Informe um e-mail válido')
+    expect(tela.text()).toContain('A senha ainda não cumpre todos os requisitos')
   })
 })

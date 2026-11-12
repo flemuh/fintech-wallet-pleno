@@ -28,7 +28,7 @@ class ValidacaoMensagensTest extends TestCase
         $this->postJson('/api/auth/register', [
             'name' => 'Fulano',
             'email' => 'ja@existe.com',
-            'password' => 'somenteletras',
+            'password' => 'Somente@letras',
         ])
             ->assertStatus(422)
             ->assertJsonPath('errors.email.0', 'O e-mail informado já está em uso.')

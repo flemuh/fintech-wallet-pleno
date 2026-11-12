@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -16,10 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
-        health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
+        // Só os proxies internos (Docker e localhost) são confiáveis: um X-Forwarded-For
+        // forjado pelo cliente não substitui o IP real usado nos limites de requisição
+        $middleware->trustProxies(at: ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '127.0.0.1']);
 
         // A API não tem página de login: sem token, o resultado é um 401 em JSON
         $middleware->redirectGuestsTo(fn (): ?string => null);
@@ -32,7 +34,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Formato único de erro: { message, code }. A validação acrescenta o campo errors
         // (detalhe por campo), e as exceções de domínio têm o próprio render().
-        $erro = fn (string $mensagem, string $codigo, int $status, array $cabecalhos = []): JsonResponse => response()->json(['message' => $mensagem, 'code' => $codigo], $status, $cabecalhos);
+        $erro = function (string $mensagem, string $codigo, int $status, array $cabecalhos = []): JsonResponse {
+            return response()->json(['message' => $mensagem, 'code' => $codigo], $status, $cabecalhos);
+        };
 
         $exceptions->render(fn (AuthenticationException $e, Request $request) => $ehApi($request)
             ? $erro('Não autenticado.', 'unauthenticated', 401)
@@ -58,4 +62,18 @@ return Application::configure(basePath: dirname(__DIR__))
                 'errors' => $e->errors(),
             ], $e->status)
             : null);
+
+        // Qualquer outro erro sai no mesmo formato, sem detalhe interno. Com APP_DEBUG ligado,
+        // o Laravel mostra o erro completo, o que ajuda no desenvolvimento
+        $exceptions->render(function (Throwable $e, Request $request) use ($ehApi, $erro): ?JsonResponse {
+            if (! $ehApi($request) || config('app.debug')) {
+                return null;
+            }
+
+            if ($e instanceof HttpExceptionInterface && $e->getStatusCode() < 500) {
+                return $erro('Não foi possível concluir a requisição.', 'request_error', $e->getStatusCode());
+            }
+
+            return $erro('Erro interno. Tente novamente em instantes.', 'server_error', 500);
+        });
     })->create();

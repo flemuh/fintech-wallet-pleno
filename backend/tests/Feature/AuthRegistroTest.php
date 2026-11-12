@@ -16,7 +16,7 @@ class AuthRegistroTest extends TestCase
         return [
             'name' => 'Ana Souza',
             'email' => 'ana@example.com',
-            'password' => 'senha1234',
+            'password' => 'Senha@1234',
         ];
     }
 

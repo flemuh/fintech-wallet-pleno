@@ -43,6 +43,17 @@ class AuthLoginTest extends TestCase
             ->assertJsonValidationErrors('email');
     }
 
+    public function test_login_recusa_senha_curta_e_email_invalido_antes_de_consultar_o_banco(): void
+    {
+        $this->postJson('/api/auth/login', ['email' => 'ana@example.com', 'password' => 'curta12'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('password');
+
+        $this->postJson('/api/auth/login', ['email' => '@semusuario', 'password' => 'senha1234'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('email');
+    }
+
     public function test_logout_revoga_o_token(): void
     {
         $usuario = $this->criarUsuario();
