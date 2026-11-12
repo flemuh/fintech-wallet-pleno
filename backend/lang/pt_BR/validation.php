@@ -12,6 +12,7 @@ return [
     'after_or_equal' => 'O campo :attribute deve ser uma data igual ou posterior a :date.',
     // O único uso de decimal no projeto é o valor em reais: 0 a 2 casas
     'decimal' => 'O campo :attribute deve ter no máximo duas casas decimais.',
+    'regex' => 'O formato do campo :attribute é inválido.',
     'gt' => [
         'numeric' => 'O campo :attribute deve ser maior que :value.',
     ],
