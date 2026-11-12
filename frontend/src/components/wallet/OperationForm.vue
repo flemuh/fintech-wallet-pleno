@@ -82,6 +82,7 @@ async function enviarFormulario(): Promise<void> {
       label="Valor (R$)"
       prefixo="R$"
       placeholder="0,00"
+      inputmode="numeric"
       autocomplete="off"
       :dica="dica ?? 'Exemplo: 10,50'"
       :mascara="mascararReais"

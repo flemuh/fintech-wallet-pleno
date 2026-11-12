@@ -64,7 +64,7 @@ describe('TransactionsView', () => {
     const { wrapper, roteador } = await montarTela('/transactions')
 
     await wrapper.find('select').setValue('credit')
-    await wrapper.find('#filtro-inicio').setValue('2026-06-01')
+    await wrapper.find('#filtro-inicio').setValue('01062026')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
@@ -74,6 +74,24 @@ describe('TransactionsView', () => {
       from: '2026-06-01',
       per_page: 10,
     })
+  })
+
+  it('mostra as datas da URL no formato brasileiro', async () => {
+    const { wrapper } = await montarTela('/transactions?from=2026-11-01&to=2026-11-12')
+
+    expect(wrapper.find<HTMLInputElement>('#filtro-inicio').element.value).toBe('01/11/2026')
+    expect(wrapper.find<HTMLInputElement>('#filtro-fim').element.value).toBe('12/11/2026')
+  })
+
+  it('não filtra com data que não existe', async () => {
+    const { wrapper, roteador } = await montarTela('/transactions')
+
+    await wrapper.find('#filtro-inicio').setValue('31022026')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(roteador.currentRoute.value.query).toEqual({})
+    expect(wrapper.text()).toContain('Informe uma data válida')
   })
 
   it('troca de página mantendo os filtros', async () => {
