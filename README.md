@@ -56,7 +56,7 @@ fintech-wallet-pleno/
 
 **Saldo após a operação gravado.** Cada transação guarda `balance_after` no momento em que é criada. O histórico não recalcula saldo, e as transações são imutáveis (sem rota de edição ou exclusão).
 
-**Datas no fuso de São Paulo.** O mês atual do painel e os dias do filtro do extrato são calculados em `America/Sao_Paulo` e convertidos para UTC na consulta; há testes para a virada do mês e para uma transação às 22h53, que em UTC já cai no dia seguinte. Na tela, os filtros de data usam dd/mm/aaaa em qualquer navegador.
+**Datas no fuso de São Paulo.** O mês atual do painel e os dias do filtro do extrato são calculados em `America/Sao_Paulo` e convertidos para UTC na consulta; há testes para a virada do mês e para uma transação às 22h53, que em UTC já cai no dia seguinte. Na tela, os filtros de data usam dd/mm/aaaa em qualquer navegador, com um botão que abre o calendário do próprio navegador.
 
 **PostgreSQL também nos testes.** O CI roda a suíte em PostgreSQL 16, o mesmo banco da produção, porque `lockForUpdate` e `CHECK` não se comportam igual no SQLite.
 
@@ -135,7 +135,7 @@ Códigos: `validation_failed` (422), `insufficient_balance` (422), `unauthentica
 | Suíte | Quantidade | O que cobre |
 |---|---|---|
 | PHPUnit (backend) | 91 | Depósito, saque, saldo insuficiente, valores inválidos e de arredondamento, histórico e filtros, resumo do mês no fuso de São Paulo, registro e login, senha fraca, e-mail inválido, token expirado e revogado, erros em JSON, limites de requisição, IP falso, CORS e seeder |
-| Vitest (frontend) | 127 | Cliente HTTP e sessão expirada, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários, painel, extrato, datas do filtro, toasts e medidor de senha |
+| Vitest (frontend) | 132 | Cliente HTTP e sessão expirada, stores, guard de rotas, menu do celular, máscara e leitura de valores, formulários, painel, extrato, datas do filtro, toasts e medidor de senha |
 
 A maior parte dos testes de backend é de cenários de falha. O CI também cobra o padrão de código: Pint (PSR-12) e Larastan (nível 6) no backend; Prettier (100 colunas), oxlint, ESLint e checagem de tipos com `vue-tsc` no frontend.
 
