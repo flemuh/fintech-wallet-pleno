@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { FileText, House, LogOut, Menu, Wallet, X } from '@lucide/vue'
+import { FileText, House, LogOut, Menu, X } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
+import AppLogo from '@/components/ui/AppLogo.vue'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
@@ -49,12 +50,7 @@ const classeDoLink =
   <div class="min-h-screen overflow-x-hidden bg-slate-50">
     <header class="border-b border-violet-100 bg-white">
       <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <span class="flex items-center gap-2 font-semibold whitespace-nowrap text-violet-800">
-          <span class="flex size-8 items-center justify-center rounded-lg bg-violet-700 text-white">
-            <Wallet class="size-4" aria-hidden="true" />
-          </span>
-          Fintech Wallet
-        </span>
+        <AppLogo />
 
         <!-- Telas médias e grandes: tudo na mesma linha -->
         <nav class="hidden flex-1 items-center gap-1 md:flex" aria-label="Principal">

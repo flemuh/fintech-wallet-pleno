@@ -13,6 +13,14 @@ function rotuloDoTipo(transacao: Transacao): string {
   return transacao.type === 'credit' ? 'Depósito (crédito)' : 'Saque (débito)'
 }
 
+function classeDoSelo(transacao: Transacao): string {
+  return transacao.type === 'credit' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
+}
+
+function classeDoValor(transacao: Transacao): string {
+  return transacao.type === 'credit' ? 'text-emerald-700' : 'text-red-700'
+}
+
 function valorComSinal(transacao: Transacao): string {
   const sinal = transacao.type === 'credit' ? '+' : '-'
   return `${sinal} ${formatarCentavos(transacao.amount)}`
@@ -30,17 +38,13 @@ function valorComSinal(transacao: Transacao): string {
         <div class="flex items-center justify-between gap-2">
           <span
             class="rounded-full px-2.5 py-0.5 text-xs font-medium"
-            :class="
-              transacao.type === 'credit'
-                ? 'bg-emerald-50 text-emerald-800'
-                : 'bg-red-50 text-red-800'
-            "
+            :class="classeDoSelo(transacao)"
           >
             {{ rotuloDoTipo(transacao) }}
           </span>
           <span
             class="font-semibold whitespace-nowrap"
-            :class="transacao.type === 'credit' ? 'text-emerald-700' : 'text-red-700'"
+            :class="classeDoValor(transacao)"
           >
             {{ valorComSinal(transacao) }}
           </span>
@@ -72,18 +76,14 @@ function valorComSinal(transacao: Transacao): string {
             <td class="px-4 py-3">
               <span
                 class="rounded-full px-2.5 py-0.5 text-xs font-medium"
-                :class="
-                  transacao.type === 'credit'
-                    ? 'bg-emerald-50 text-emerald-800'
-                    : 'bg-red-50 text-red-800'
-                "
+                :class="classeDoSelo(transacao)"
               >
                 {{ rotuloDoTipo(transacao) }}
               </span>
             </td>
             <td
               class="px-4 py-3 text-right font-medium"
-              :class="transacao.type === 'credit' ? 'text-emerald-700' : 'text-red-700'"
+              :class="classeDoValor(transacao)"
             >
               {{ valorComSinal(transacao) }}
             </td>

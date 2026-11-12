@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Wallet } from '@lucide/vue'
 import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import AppAlert from '@/components/ui/AppAlert.vue'
 import AppField from '@/components/ui/AppField.vue'
+import AppLogo from '@/components/ui/AppLogo.vue'
 import PasswordStrength from '@/components/ui/PasswordStrength.vue'
 import { useEnvio } from '@/composables/useEnvio'
 import { useToast } from '@/composables/useToast'
@@ -51,12 +51,7 @@ async function registrar(): Promise<void> {
 <template>
   <main class="flex min-h-screen items-center justify-center bg-slate-50 p-4">
     <form class="cartao w-full max-w-sm space-y-4 p-6" novalidate @submit.prevent="registrar">
-      <p class="flex items-center gap-2 font-semibold text-violet-800">
-        <span class="flex size-8 items-center justify-center rounded-lg bg-violet-700 text-white">
-          <Wallet class="size-4" aria-hidden="true" />
-        </span>
-        Fintech Wallet
-      </p>
+      <AppLogo />
       <h1 class="text-xl font-semibold text-slate-900">Criar conta</h1>
 
       <AppAlert v-if="erroGeral" tipo="erro">{{ erroGeral }}</AppAlert>

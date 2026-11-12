@@ -115,7 +115,7 @@ function mudarPagina(numero: number): void {
         <select
           id="filtro-tipo"
           v-model="formulario.type"
-          class="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm transition-colors hover:border-violet-300 focus:border-violet-600 focus:ring-4 focus:ring-violet-100 focus:outline-none"
+          class="campo mt-1"
         >
           <option value="">Todos</option>
           <option value="credit">Depósitos (crédito)</option>

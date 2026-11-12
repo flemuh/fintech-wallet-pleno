@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Wallet } from '@lucide/vue'
 import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import AppAlert from '@/components/ui/AppAlert.vue'
 import AppField from '@/components/ui/AppField.vue'
+import AppLogo from '@/components/ui/AppLogo.vue'
 import { useEnvio } from '@/composables/useEnvio'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
@@ -41,7 +41,7 @@ async function entrar(): Promise<void> {
       novalidate
       @submit.prevent="entrar"
     >
-      <p class="flex items-center gap-2 font-semibold text-violet-800"><span class="flex size-8 items-center justify-center rounded-lg bg-violet-700 text-white"><Wallet class="size-4" aria-hidden="true" /></span>Fintech Wallet</p>
+      <AppLogo />
       <h1 class="text-xl font-semibold text-slate-900">Entrar</h1>
 
       <AppAlert v-if="erroGeral" tipo="erro">{{ erroGeral }}</AppAlert>
