@@ -41,6 +41,7 @@ updates:
     groups:
       todas:
         patterns: ['*']
+
   - package-ecosystem: docker
     directories: [/docker/php, /docker/nginx]
     target-branch: dev
