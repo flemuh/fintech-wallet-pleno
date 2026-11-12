@@ -11,12 +11,18 @@ class LoginRequest extends FormRequest
         return true;
     }
 
-    /** @return array<string, array<int, string>> */
+    /**
+     * A senha não repete as regras do cadastro: qualquer senha errada,
+     * curta ou longa, recebe a mesma resposta genérica do AuthService.
+     *
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
             'email' => ['required', 'string', 'email:rfc,filter', 'max:255'],
-            'password' => ['required', 'string', 'min:8', 'max:255'],
+            // O máximo só evita processar textos enormes
+            'password' => ['required', 'string', 'max:255'],
         ];
     }
 }

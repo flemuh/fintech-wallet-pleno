@@ -52,6 +52,30 @@ class CadastroSeguroTest extends TestCase
             ->assertJsonValidationErrors('password');
     }
 
+    public function test_senha_com_64_caracteres_e_aceita(): void
+    {
+        $this->postJson('/api/auth/register', $this->dados(['password' => 'Senha@12'.str_repeat('x', 56)]))
+            ->assertCreated();
+    }
+
+    public function test_senha_acima_de_64_caracteres_retorna_422(): void
+    {
+        $this->postJson('/api/auth/register', $this->dados(['password' => 'Senha@12'.str_repeat('x', 57)]))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.password.0', 'O campo senha não pode ter mais de 64 caracteres.');
+    }
+
+    public function test_senha_acima_de_72_bytes_retorna_422(): void
+    {
+        // 47 caracteres, mas 73 bytes: cada "ç" e "ã" ocupa 2 bytes
+        $senha = 'Senha@12'.str_repeat('ção', 13);
+        $mensagem = 'O campo senha ficou longo demais. Use menos acentos ou caracteres especiais.';
+
+        $this->postJson('/api/auth/register', $this->dados(['password' => $senha]))
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.password.0', $mensagem);
+    }
+
     /**
      * @return array<string, array{0: string}>
      */
