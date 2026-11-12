@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { avaliarSenha, emailValido, forcaDaSenha, senhaForte } from '@/utils/validacao'
+import {
+  avaliarSenha,
+  emailValido,
+  forcaDaSenha,
+  senhaCabeNoLimite,
+  senhaForte,
+} from '@/utils/validacao'
 
 describe('avaliarSenha', () => {
   it('marca cada critério separadamente', () => {
@@ -43,5 +49,13 @@ describe('emailValido', () => {
     '',
   ])('recusa "%s"', (email) => {
     expect(emailValido(email)).toBe(false)
+  })
+})
+
+describe('senhaCabeNoLimite', () => {
+  it('conta bytes, não caracteres: acentos ocupam 2 bytes cada', () => {
+    expect(senhaCabeNoLimite('a'.repeat(72))).toBe(true)
+    expect(senhaCabeNoLimite('ç'.repeat(36))).toBe(true)
+    expect(senhaCabeNoLimite('ç'.repeat(37))).toBe(false)
   })
 })

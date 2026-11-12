@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import AppAlert from '@/components/ui/AppAlert.vue'
 import AppField from '@/components/ui/AppField.vue'
 import AppLogo from '@/components/ui/AppLogo.vue'
 import PasswordStrength from '@/components/ui/PasswordStrength.vue'
+import { useCampos } from '@/composables/useCampos'
 import { useEnvio } from '@/composables/useEnvio'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
-import { emailValido, senhaForte } from '@/utils/validacao'
-
-type Campo = 'name' | 'email' | 'password'
+import { LIMITES, emailValido, senhaCabeNoLimite, senhaForte } from '@/utils/validacao'
 
 const roteador = useRouter()
 const auth = useAuthStore()
@@ -19,28 +18,29 @@ const toast = useToast()
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
 const formulario = reactive({ name: '', email: '', password: '' })
-const errosLocais = ref<Partial<Record<Campo, string>>>({})
 
-// O erro da tela vem antes do da API: nada inválido chega a ser enviado
-function erroDo(campo: Campo): string | undefined {
-  return errosLocais.value[campo] ?? errosDosCampos.value[campo]?.[0]
-}
+// Mesmas regras do RegisterRequest: nada inválido chega a ser enviado
+const campos = useCampos(
+  formulario,
+  {
+    name: () => (formulario.name.trim() ? null : 'Informe o seu nome.'),
+    email: () =>
+      emailValido(formulario.email) ? null : 'Informe um e-mail válido, como nome@exemplo.com.',
+    password: () => {
+      if (!senhaCabeNoLimite(formulario.password)) {
+        return 'O campo senha ficou longo demais. Use menos acentos ou caracteres especiais.'
+      }
 
-function validarNaTela(): boolean {
-  const erros: Partial<Record<Campo, string>> = {}
-
-  if (!formulario.name.trim()) erros.name = 'Informe o seu nome.'
-  if (!emailValido(formulario.email))
-    erros.email = 'Informe um e-mail válido, como nome@exemplo.com.'
-  if (!senhaForte(formulario.password))
-    erros.password = 'A senha ainda não cumpre todos os requisitos abaixo.'
-
-  errosLocais.value = erros
-  return Object.keys(erros).length === 0
-}
+      return senhaForte(formulario.password)
+        ? null
+        : 'A senha ainda não cumpre todos os requisitos abaixo.'
+    },
+  },
+  errosDosCampos,
+)
 
 async function registrar(): Promise<void> {
-  if (!validarNaTela()) return
+  if (!campos.validarTudo()) return
 
   const sucesso = await enviar(() => auth.registrar(formulario))
   if (!sucesso) return
@@ -63,7 +63,10 @@ async function registrar(): Promise<void> {
         v-model="formulario.name"
         label="Nome"
         autocomplete="name"
-        :erro="erroDo('name')"
+        :maxlength="LIMITES.nome"
+        :erro="campos.erroDo('name')"
+        :valido="campos.valido('name')"
+        @sair="campos.sair('name')"
       />
       <AppField
         id="email"
@@ -71,7 +74,10 @@ async function registrar(): Promise<void> {
         label="E-mail"
         type="email"
         autocomplete="email"
-        :erro="erroDo('email')"
+        :maxlength="LIMITES.email"
+        :erro="campos.erroDo('email')"
+        :valido="campos.valido('email')"
+        @sair="campos.sair('email')"
       />
       <AppField
         id="password"
@@ -79,7 +85,10 @@ async function registrar(): Promise<void> {
         label="Senha"
         type="password"
         autocomplete="new-password"
-        :erro="erroDo('password')"
+        :maxlength="LIMITES.senha"
+        :erro="campos.erroDo('password')"
+        :valido="campos.valido('password')"
+        @sair="campos.sair('password')"
       />
       <PasswordStrength :senha="formulario.password" />
 

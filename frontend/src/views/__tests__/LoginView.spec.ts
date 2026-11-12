@@ -116,15 +116,44 @@ describe('tela de login', () => {
     expect(tela.text()).toContain('Informe um e-mail válido')
   })
 
-  it('não envia senha com menos de 8 caracteres para a API', async () => {
+  it('não repete as regras do cadastro: senha curta vai para a API decidir', async () => {
+    vi.mocked(api.entrar).mockReturnValue(new Promise(() => {}))
     const { tela } = await montarTela()
 
     await tela.find('#email').setValue('ana@exemplo.com')
-    await tela.find('#password').setValue('curta12')
+    await tela.find('#password').setValue('curta')
+    await tela.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(api.entrar).toHaveBeenCalled()
+    expect(tela.text()).not.toContain('8 caracteres')
+  })
+
+  it('pede a senha quando ela está vazia', async () => {
+    const { tela } = await montarTela()
+
+    await tela.find('#email').setValue('ana@exemplo.com')
     await tela.find('form').trigger('submit')
     await flushPromises()
 
     expect(api.entrar).not.toHaveBeenCalled()
-    expect(tela.text()).toContain('pelo menos 8 caracteres')
+    expect(tela.text()).toContain('Informe a senha.')
+  })
+
+  it('credenciais inválidas somem quando a pessoa edita a senha', async () => {
+    vi.mocked(api.entrar).mockRejectedValue(
+      erroDaApi(422, {
+        message: 'Credenciais inválidas.',
+        code: 'validation_failed',
+        errors: { email: ['Credenciais inválidas.'] },
+      }),
+    )
+    const { tela } = await montarTela()
+
+    await preencherEEnviar(tela)
+    await flushPromises()
+    await tela.find('#password').setValue('outra-senha')
+
+    expect(tela.text()).not.toContain('Credenciais inválidas.')
   })
 })

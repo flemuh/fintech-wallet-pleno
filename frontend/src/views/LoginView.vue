@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import AppAlert from '@/components/ui/AppAlert.vue'
 import AppField from '@/components/ui/AppField.vue'
 import AppLogo from '@/components/ui/AppLogo.vue'
+import { useCampos } from '@/composables/useCampos'
 import { useEnvio } from '@/composables/useEnvio'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
-import { emailValido, senhaDeLoginValida } from '@/utils/validacao'
+import { LIMITES, emailValido } from '@/utils/validacao'
 
 const roteador = useRouter()
 const auth = useAuthStore()
@@ -16,17 +17,26 @@ const toast = useToast()
 const { enviando, erroGeral, errosDosCampos, enviar } = useEnvio()
 
 const formulario = reactive({ email: '', password: '' })
-const erroDoEmail = ref<string | null>(null)
-const erroDaSenha = ref<string | null>(null)
+
+// O login não repete as regras de senha do cadastro: quem diz se ela está certa é a API,
+// sempre com a mesma resposta genérica
+const campos = useCampos(
+  formulario,
+  {
+    email: () =>
+      emailValido(formulario.email) ? null : 'Informe um e-mail válido, como nome@exemplo.com.',
+    password: () => (formulario.password ? null : 'Informe a senha.'),
+  },
+  errosDosCampos,
+)
+
+// "Credenciais inválidas." vale para os dois campos: some quando qualquer um deles muda
+watch(formulario, () => {
+  errosDosCampos.value = {}
+})
 
 async function entrar(): Promise<void> {
-  erroDoEmail.value = emailValido(formulario.email)
-    ? null
-    : 'Informe um e-mail válido, como nome@exemplo.com.'
-  erroDaSenha.value = senhaDeLoginValida(formulario.password)
-    ? null
-    : 'A senha deve ter pelo menos 8 caracteres.'
-  if (erroDoEmail.value || erroDaSenha.value) return
+  if (!campos.validarTudo()) return
 
   const sucesso = await enviar(() => auth.entrar(formulario))
   if (!sucesso) return
@@ -50,7 +60,9 @@ async function entrar(): Promise<void> {
         label="E-mail"
         type="email"
         autocomplete="email"
-        :erro="erroDoEmail ?? errosDosCampos.email?.[0]"
+        :maxlength="LIMITES.email"
+        :erro="campos.erroDo('email')"
+        @sair="campos.sair('email')"
       />
       <AppField
         id="password"
@@ -58,7 +70,9 @@ async function entrar(): Promise<void> {
         label="Senha"
         type="password"
         autocomplete="current-password"
-        :erro="erroDaSenha ?? errosDosCampos.password?.[0]"
+        :maxlength="LIMITES.senha"
+        :erro="campos.erroDo('password')"
+        @sair="campos.sair('password')"
       />
 
       <button type="submit" :disabled="enviando" class="botao-primario w-full">
