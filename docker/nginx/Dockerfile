@@ -1,5 +1,5 @@
 # Compila o Vue e entrega o resultado dentro do Nginx
-FROM node:24-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm ci --ignore-scripts
