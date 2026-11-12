@@ -65,7 +65,7 @@ onMounted(() => wallet.carregarPainel())
           rotulo-do-botao="Depositar"
           mensagem-de-sucesso="Depósito realizado com sucesso."
           destaque="primario"
-          dica="Digite só os números: 1050 vira 10,50"
+          dica="Máximo por operação: R$ 999.999,99"
           :icone="Plus"
           :executar="wallet.depositar"
         />
